@@ -5,25 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>供應商管理系統</title>
     <style>
-        :root { --primary: #2c3e50; --bg: #f4f7f6; --success: #27ae60; }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
-        .container { max-width: 900px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        /* 配色調整為粉色與灰色為主 */
+        :root { 
+            --primary: #7f8c8d;    /* 深灰色 */
+            --accent: #f8d7da;     /* 淺粉色 */
+            --bg: #fdf2f4;         /* 極淡粉色背景 */
+            --success: #e8aeb7;    /* 粉紅成功色 */
+            --text: #5d5d5d;       /* 灰黑文字 */
+            --white: #ffffff;
+        }
+        
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: var(--text); }
+        .container { max-width: 900px; margin: 20px auto; background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        
         .header-logo { width: 90px; margin-bottom: 15px; display: block; }
+        
         #login-section { text-align: center; padding: 30px 0; }
         .login-box { max-width: 350px; margin: 0 auto; }
-        #control-panel { display: none; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #eee; }
+        
+        #control-panel { display: none; background: #fef9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #f2e1e4; }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
+        
         .btn-group { display: flex; gap: 8px; }
         input, button { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; }
-        button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; }
-        .btn-reload { background: var(--success); }
-        .btn-logout { background: #95a5a6; }
-        .order-card { background: #fff; border: 1px solid #eef0f2; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--primary); }
+        
+        button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
+        button:hover { opacity: 0.8; }
+        .btn-reload { background: var(--success); color: white; }
+        .btn-logout { background: #bdc3c7; }
+
+        .order-card { background: #fff; border: 1px solid #f2e1e4; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--accent); }
         .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .label { font-size: 12px; color: #999; font-weight: bold; }
-        .val { font-size: 15px; color: #333; white-space: pre-wrap; }
+        
+        .label { font-size: 12px; color: #a1a1a1; font-weight: bold; margin-bottom: 2px; display: block; }
+        .val { font-size: 15px; color: var(--text); white-space: pre-wrap; word-break: break-all; }
         .full { grid-column: span 2; }
+        
         @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } .full { grid-column: span 1; } }
+
+        h2, h4 { margin-top: 0; color: var(--primary); }
+        .count-tag { font-size: 14px; color: #999; margin-bottom: 10px; }
+        
         .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 5px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -34,17 +56,17 @@
     <img src="https://www.bespoke-mall.com/pub/media/webp_image/logo/stores/1/BespokeMallv4.webp" alt="LOGO" class="header-logo">
 
     <div id="login-section">
-        <h2>供應商登入系統</h2>
+        <h2>供應商管理登入</h2>
         <div class="login-box">
-            <input type="text" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:10px;">
+            <input type="text" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:10px; border-color: #f2e1e4;">
             <button id="loginBtn" onclick="doLogin()" style="width:100%;">驗證並讀取資料</button>
-            <p id="login-msg" style="color:red; font-size:14px; display:none; margin-top:10px;">找不到此識別碼，請確認第 14 列後的資料格式是否正確</p>
+            <p id="login-msg" style="color:#e8aeb7; font-size:14px; display:none; margin-top:10px; font-weight: bold;">找不到此識別碼，請確認資料格式</p>
         </div>
     </div>
 
     <div id="control-panel">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
-            <h4>訂單資料篩選器</h4>
+            <h4>訂單篩選</h4>
             <div class="btn-group">
                 <button class="btn-reload" id="reloadBtn" onclick="reloadData()">更新資料</button>
                 <button class="btn-logout" onclick="location.reload()">登出</button>
@@ -58,7 +80,7 @@
         </div>
     </div>
 
-    <div id="status-msg" style="margin-top: 10px; font-size: 14px; color: #666;"></div>
+    <div id="status-msg" class="count-tag"></div>
     <div id="result-list"></div>
 </div>
 
@@ -67,7 +89,7 @@
     let allSupplierData = [];
     let currentKey = "";
 
-    // 【核心修正】專業級 CSV 解析函數，專門處理包含換行、引號與逗號的複雜儲存格
+    // 工業級 CSV 解析：處理換行與雙引號
     function parseCSVStrict(str) {
         const arr = [];
         let quote = false;
@@ -105,9 +127,7 @@
             const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
             const text = await resp.text();
             const rows = parseCSVStrict(text);
-            
             const sk = currentKey.trim().toLowerCase();
-            // C 欄位在 Index 2
             allSupplierData = rows.filter(r => r[2] && r[2].trim().toLowerCase() === sk);
             return allSupplierData.length > 0;
         } catch (e) { return false; }
@@ -118,7 +138,7 @@
         if (!currentKey) return;
         const btn = document.getElementById('loginBtn');
         btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spin"></span> 驗證中...';
+        btn.innerHTML = '<span class="loading-spin"></span> 載入中...';
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
@@ -144,7 +164,6 @@
         const end = document.getElementById('filter-end').value;
         const nameK = document.getElementById('filter-name').value.toLowerCase();
         const idK = document.getElementById('filter-id').value.toLowerCase();
-        
         const sTime = start ? new Date(start).setHours(0,0,0,0) : null;
         const eTime = end ? new Date(end).setHours(23,59,59,999) : null;
 
@@ -166,7 +185,7 @@
     function renderList(data) {
         const area = document.getElementById('result-list');
         area.innerHTML = "";
-        document.getElementById('status-msg').innerText = `找到 ${data.length} 筆相關訂單`;
+        document.getElementById('status-msg').innerText = `已找到 ${data.length} 筆訂單`;
         data.forEach(r => {
             const card = document.createElement('div');
             card.className = 'order-card';
