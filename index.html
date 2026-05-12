@@ -88,15 +88,39 @@
     let allSupplierData = [];
     let currentKey = "";
 
-    // 格式化顯示用：2025年07月25日
+    // 強大的日期解析器：處理 DD/MM/YYYY 或 YYYY/MM/DD
+    function parseDateSafe(dateStr) {
+        if (!dateStr || dateStr === '-' || dateStr.trim() === "") return null;
+        
+        // 嘗試用 / 或 - 拆分
+        let parts = dateStr.split(/[\/\-]/);
+        let d = new Date(dateStr);
+
+        // 如果是 3 份資料 (日、月、年)
+        if (parts.length === 3) {
+            let p0 = parseInt(parts[0]);
+            let p1 = parseInt(parts[1]);
+            let p2 = parseInt(parts[2]);
+
+            // 判斷是否為 DD/MM/YYYY (第一位是日)
+            if (p0 <= 31 && p2 > 1000) {
+                d = new Date(p2, p1 - 1, p0);
+            } 
+            // 判斷是否為 YYYY/MM/DD (第一位是年)
+            else if (p0 > 1000) {
+                d = new Date(p0, p1 - 1, p2);
+            }
+        }
+        
+        return isNaN(d.getTime()) ? null : d;
+    }
+
     function formatDateChinese(dateStr) {
-        if (!dateStr || dateStr === '-' || dateStr.trim() === "") return '-';
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return dateStr;
+        const d = parseDateSafe(dateStr);
+        if (!d) return dateStr || '-';
         return `${d.getFullYear()}年${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日`;
     }
 
-    // 核心資料讀取
     async function loadDataFromServer() {
         try {
             const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
@@ -113,7 +137,6 @@
         const btn = document.getElementById('loginBtn');
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span> 讀取中...';
-
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
@@ -134,16 +157,14 @@
         setTimeout(() => { btn.disabled = false; btn.innerText = "重新載入最新資料"; }, 500);
     }
 
-    // 修正後的過濾邏輯
     function applyFilters() {
-        const startStr = document.getElementById('filter-start').value;
-        const endStr = document.getElementById('filter-end').value;
+        const startVal = document.getElementById('filter-start').value;
+        const endVal = document.getElementById('filter-end').value;
         const nameKwd = document.getElementById('filter-name').value.toLowerCase();
         const idKwd = document.getElementById('filter-id').value.toLowerCase();
 
-        // 建立精確的時間戳進行比對
-        const startTime = startStr ? new Date(startStr).setHours(0,0,0,0) : null;
-        const endTime = endStr ? new Date(endStr).setHours(23,59,59,999) : null;
+        const startTime = startVal ? new Date(startVal).setHours(0,0,0,0) : null;
+        const endTime = endVal ? new Date(endVal).setHours(23,59,59,999) : null;
 
         const filtered = allSupplierData.filter(row => {
             const rawDelivDate = row[5] ? row[5].replace(/"/g, '').trim() : "";
@@ -151,17 +172,16 @@
             const orderId = row[3] ? row[3].replace(/"/g, '').trim().toLowerCase() : "";
 
             let dateMatch = true;
-            if (rawDelivDate && rawDelivDate !== '-') {
-                const dObj = new Date(rawDelivDate);
-                const dTime = dObj.getTime();
-                if (!isNaN(dTime)) {
+            const dObj = parseDateSafe(rawDelivDate);
+
+            if (startTime || endTime) {
+                if (dObj) {
+                    const dTime = dObj.getTime();
                     if (startTime && dTime < startTime) dateMatch = false;
                     if (endTime && dTime > endTime) dateMatch = false;
-                } else if (startTime || endTime) {
-                    dateMatch = false; // 日期格式錯誤且有設範圍時隱藏
+                } else {
+                    dateMatch = false; // 有設日期範圍但該筆資料沒日期，則不顯示
                 }
-            } else if (startTime || endTime) {
-                dateMatch = false; // 無日期且有設範圍時隱藏
             }
 
             return dateMatch && name.includes(nameKwd) && orderId.includes(idKwd);
@@ -174,7 +194,6 @@
         const listArea = document.getElementById('result-list');
         listArea.innerHTML = "";
         document.getElementById('status-msg').innerText = `顯示筆數：${data.length}`;
-
         data.forEach(row => {
             const card = document.createElement('div');
             card.className = 'order-card';
@@ -193,10 +212,7 @@
         });
     }
 
-    function clean(str) {
-        return str ? str.replace(/"/g, '').trim() : '-';
-    }
+    function clean(str) { return str ? str.replace(/"/g, '').trim() : '-'; }
 </script>
-
 </body>
 </html>
