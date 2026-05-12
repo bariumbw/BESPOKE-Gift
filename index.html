@@ -3,31 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>供應商即時出貨查詢系統</title>
+    <title>供應商出貨即時查詢系統</title>
     <style>
-        :root { --primary: #007bff; --bg: #f8f9fa; --text: #333; }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
-        .container { max-width: 1100px; margin: 0 auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 25px; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .card { background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .header { text-align: center; margin-bottom: 2rem; }
+        h2 { margin: 0; color: #0f172a; font-size: 1.5rem; }
         
-        /* 搜尋區 */
-        .search-area { display: flex; gap: 10px; justify-content: center; margin-bottom: 25px; }
-        input { padding: 12px; border: 2px solid #ddd; border-radius: 8px; width: 260px; font-size: 16px; outline: none; }
-        input:focus { border-color: var(--primary); }
-        button { padding: 12px 25px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #0056b3; }
+        .search-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 2rem; }
+        input { padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; width: 240px; font-size: 16px; transition: border-color 0.2s; }
+        input:focus { border-color: var(--primary); outline: none; }
+        button { padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 16px; }
+        button:hover { background: #1d4ed8; }
 
-        /* 表格區 */
-        .table-responsive { overflow-x: auto; display: none; margin-top: 20px; border: 1px solid #eee; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        th { background: #f1f3f5; padding: 12px; text-align: left; font-size: 14px; color: #555; }
-        td { padding: 15px 12px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: top; }
+        .table-container { overflow-x: auto; display: none; margin-top: 1.5rem; border: 1px solid #e2e8f0; border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; min-width: 850px; }
+        th { background: #f8fafc; padding: 14px; text-align: left; font-size: 0.875rem; color: #64748b; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 16px 14px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; vertical-align: top; }
         
-        .product-tag { color: #d9534f; font-weight: bold; }
-        .remark-text { color: #6c757d; font-size: 13px; }
-        .loading { display: none; text-align: center; color: var(--primary); font-weight: bold; margin: 15px 0; }
-        .error { display: none; text-align: center; color: #d9534f; background: #f8d7da; padding: 10px; border-radius: 6px; margin-top: 15px; }
+        .order-tag { font-weight: 700; color: #1e293b; }
+        .product-info { color: #2563eb; font-weight: 500; }
+        .remark-text { color: #64748b; font-size: 0.85rem; line-height: 1.5; }
+        
+        .status { text-align: center; margin-top: 1rem; font-weight: 500; }
+        #loading { display: none; color: var(--primary); }
+        #error { display: none; color: #ef4444; background: #fee2e2; padding: 12px; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -35,19 +37,19 @@
 <div class="container">
     <div class="card">
         <div class="header">
-            <h2>供應商出貨查詢 (即時同步版)</h2>
-            <p>輸入識別碼即可查看您品牌的最新訂單狀態</p>
+            <h2>供應商出貨即時查詢</h2>
+            <p>輸入識別碼獲取最新訂單與配送資訊</p>
         </div>
 
-        <div class="search-area">
-            <input type="text" id="sidInput" placeholder="輸入 supplier_id">
-            <button onclick="fetchData()">查詢</button>
+        <div class="search-group">
+            <input type="text" id="sidInput" placeholder="請輸入識別碼...">
+            <button onclick="doQuery()">查詢</button>
         </div>
 
-        <div id="loading" class="loading">正在連線至 Google Sheets 資料庫...</div>
-        <div id="errorMsg" class="error">查無資料，請確認識別碼或聯繫代理商。</div>
+        <div id="loading" class="status">🔄 正在連線至雲端資料庫...</div>
+        <div id="error" class="status">⚠️ 查無資料，請確認識別碼或聯繫客服。</div>
 
-        <div id="resultBox" class="table-responsive">
+        <div id="resultArea" class="table-container">
             <table>
                 <thead>
                     <tr>
@@ -66,55 +68,51 @@
 </div>
 
 <script>
-    // 這裡填入你剛剛獲得的 Web App 網址
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxNaH1zPAxdSsq8I9b9BDQcnJnAzLx_HuG_iRdGrt8ChdmcnESDwoJD0nz_HVcle2Wx1Q/exec";
+    // 這是你剛剛生成的最終 Web App 網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbxFc6guxQYJ_AN8-6r1S1iMI5hhAxDJ0zfA8B_1cJAdRMmPeFLde5RKse1aNs5Y9ATMQg/exec";
 
-    async function fetchData() {
+    async function doQuery() {
         const sid = document.getElementById('sidInput').value.trim();
         const loading = document.getElementById('loading');
-        const error = document.getElementById('errorMsg');
-        const resultBox = document.getElementById('resultBox');
+        const error = document.getElementById('error');
+        const result = document.getElementById('resultArea');
         const tbody = document.getElementById('tableBody');
 
         if (!sid) return;
 
-        // 初始化顯示狀態
+        // 畫面初始化
         loading.style.display = 'block';
         error.style.display = 'none';
-        resultBox.style.display = 'none';
+        result.style.display = 'none';
 
         try {
-            // 呼叫 Apps Script API 並傳入 sid 參數
-            const response = await fetch(`${WEB_APP_URL}?sid=${encodeURIComponent(sid)}`);
+            // 發送請求
+            const response = await fetch(`${API_URL}?sid=${encodeURIComponent(sid)}`);
+            if (!response.ok) throw new Error();
             const data = await response.json();
 
             if (data && data.length > 0) {
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                
                 tbody.innerHTML = data.map(item => `
                     <tr>
-                        <td><strong>${item.order_no || '-'}</strong></td>
+                        <td class="order-tag">${item.order_no || '-'}</td>
                         <td>${item.customer || '-'}</td>
                         <td>${item.date || '-'}</td>
-                        <td>${row_address(item.address)}</td>
-                        <td class="product-tag">${item.product || '-'}</td>
+                        <td>${item.address || '-'}</td>
+                        <td class="product-info">${item.product || '-'}</td>
                         <td class="remark-text">${item.remark || '-'}</td>
                     </tr>
                 `).join('');
-                
-                loading.style.display = 'none';
-                resultBox.style.display = 'block';
             } else {
-                throw new Error("No data");
+                throw new Error("Empty data");
             }
         } catch (e) {
             loading.style.display = 'none';
             error.style.display = 'block';
+            console.error("Query Error:", e);
         }
-    }
-
-    // 處理地址中可能出現的換行或逗號
-    function row_address(addr) {
-        if (!addr) return '-';
-        return addr.toString().replace(/"/g, '');
     }
 </script>
 
