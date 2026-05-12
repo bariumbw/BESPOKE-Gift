@@ -8,25 +8,36 @@
         :root { --primary: #2c3e50; --accent: #c5a059; --bg: #f4f7f6; --success: #27ae60; }
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
         .container { max-width: 900px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-        .header-logo { width: 180px; margin-bottom: 20px; display: block; }
-        #login-section { text-align: center; padding: 40px 0; }
+        
+        /* LOGO 樣式 (已縮小 50%) */
+        .header-logo { width: 90px; margin-bottom: 15px; display: block; }
+        
+        #login-section { text-align: center; padding: 30px 0; }
         .login-box { max-width: 350px; margin: 0 auto; }
+        
         #control-panel { display: none; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #eee; }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
+        
         .btn-group { display: flex; gap: 8px; }
         input, button { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; }
-        button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; }
+        button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
+        button:hover { opacity: 0.9; }
         .btn-reload { background: var(--success); }
         .btn-logout { background: #95a5a6; }
+
         .order-card { background: #fff; border: 1px solid #eef0f2; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--primary); }
         .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+        
         .label { font-size: 12px; color: #999; font-weight: bold; margin-bottom: 2px; display: block; }
         .val { font-size: 15px; color: #333; word-break: break-all; }
         .full { grid-column: span 2; }
+        @media (max-width: 600px) { .full { grid-column: span 1; } }
+
         h2, h4 { margin-top: 0; color: var(--primary); }
         .count-tag { font-size: 14px; color: #666; margin-bottom: 10px; }
-        .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s infinite; margin-right: 5px; }
+        
+        .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-right: 5px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -38,7 +49,7 @@
     <div id="login-section">
         <h2>供應商登入系統</h2>
         <div class="login-box">
-            <input type="password" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:10px;">
+            <input type="text" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:10px;">
             <button id="loginBtn" onclick="doLogin()" style="width:100%;">驗證並讀取資料</button>
             <p id="login-msg" style="color:red; font-size:14px; display:none; margin-top:10px;">找不到此識別碼，請檢查大小寫或等候 5 分鐘再試</p>
         </div>
@@ -53,10 +64,22 @@
             </div>
         </div>
         <div class="filter-grid">
-            <div><span class="label">送貨日期 (起)</span><input type="date" id="filter-start" onchange="applyFilters()"></div>
-            <div><span class="label">送貨日期 (迄)</span><input type="date" id="filter-end" onchange="applyFilters()"></div>
-            <div><span class="label">客人姓名</span><input type="text" id="filter-name" placeholder="搜尋姓名..." oninput="applyFilters()"></div>
-            <div><span class="label">單號</span><input type="text" id="filter-id" placeholder="搜尋單號..." oninput="applyFilters()"></div>
+            <div>
+                <span class="label">送貨日期 (起)</span>
+                <input type="date" id="filter-start" onchange="applyFilters()">
+            </div>
+            <div>
+                <span class="label">送貨日期 (迄)</span>
+                <input type="date" id="filter-end" onchange="applyFilters()">
+            </div>
+            <div>
+                <span class="label">客人姓名</span>
+                <input type="text" id="filter-name" placeholder="搜尋姓名..." oninput="applyFilters()">
+            </div>
+            <div>
+                <span class="label">單號</span>
+                <input type="text" id="filter-id" placeholder="搜尋單號..." oninput="applyFilters()">
+            </div>
         </div>
     </div>
 
@@ -66,6 +89,7 @@
 
 <script>
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
+    
     let allSupplierData = [];
     let currentKey = "";
 
@@ -82,7 +106,6 @@
         return rows;
     }
 
-    // 格式化顯示用
     function parseDateSmart(dateStr) {
         if (!dateStr || dateStr === '-' || dateStr.trim() === "") return null;
         let d = new Date(dateStr);
@@ -95,7 +118,7 @@
             if (p0 <= 31 && p2 > 1000) return new Date(p2, p1 - 1, p0);
             if (p0 > 1000) return new Date(p0, p1 - 1, p2);
         }
-        return null;
+        return null; 
     }
 
     function formatDateChinese(dateStr) {
@@ -109,14 +132,12 @@
             const text = await resp.text();
             const rows = parseCSV(text);
             
-            // 【終極比對修正】忽略引號、空格、不分大小寫
             const searchKey = currentKey.trim().toLowerCase();
             allSupplierData = rows.filter(r => {
                 if (!r[2]) return false;
                 const sheetID = r[2].replace(/["']/g, '').trim().toLowerCase();
                 return sheetID === searchKey;
             });
-
             return allSupplierData.length > 0;
         } catch (e) { return false; }
     }
