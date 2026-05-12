@@ -3,91 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>即時出貨查詢系統</title>
+    <title>供應商即時出貨查詢系統</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .card { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .search-box { display: flex; gap: 10px; margin-bottom: 30px; justify-content: center; }
-        input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 250px; }
-        button { padding: 12px 24px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; display: none; margin-top: 20px; }
-        th, td { border-bottom: 1px solid #eee; padding: 15px; text-align: left; font-size: 14px; }
-        th { background: #f8fafc; color: #64748b; }
-        .loading { display: none; text-align: center; color: #2563eb; font-weight: bold; }
-        .error { display: none; color: #ef4444; text-align: center; margin-top: 10px; }
+        :root { --primary: #007bff; --bg: #f8f9fa; --text: #333; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 25px; }
+        
+        /* 搜尋區 */
+        .search-area { display: flex; gap: 10px; justify-content: center; margin-bottom: 25px; }
+        input { padding: 12px; border: 2px solid #ddd; border-radius: 8px; width: 260px; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { padding: 12px 25px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+
+        /* 表格區 */
+        .table-responsive { overflow-x: auto; display: none; margin-top: 20px; border: 1px solid #eee; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #f1f3f5; padding: 12px; text-align: left; font-size: 14px; color: #555; }
+        td { padding: 15px 12px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: top; }
+        
+        .product-tag { color: #d9534f; font-weight: bold; }
+        .remark-text { color: #6c757d; font-size: 13px; }
+        .loading { display: none; text-align: center; color: var(--primary); font-weight: bold; margin: 15px 0; }
+        .error { display: none; text-align: center; color: #d9534f; background: #f8d7da; padding: 10px; border-radius: 6px; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2 style="text-align: center;">供應商即時查詢系統</h2>
-    <div class="search-box">
-        <input type="text" id="sid" placeholder="請輸入 supplier_id">
-        <button onclick="queryData()">即時查詢</button>
-    </div>
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <h2>供應商出貨查詢 (即時同步版)</h2>
+            <p>輸入識別碼即可查看您品牌的最新訂單狀態</p>
+        </div>
 
-    <div id="loading" class="loading">連線至試算表中...</div>
-    <div id="error" class="error">找不到符合資料，請確認 ID 是否正確。</div>
+        <div class="search-area">
+            <input type="text" id="sidInput" placeholder="輸入 supplier_id">
+            <button onclick="fetchData()">查詢</button>
+        </div>
 
-    <div id="resultTable" style="overflow-x: auto;">
-        <table id="shipmentTable">
-            <thead>
-                <tr>
-                    <th>單號</th>
-                    <th>客人姓名</th>
-                    <th>送貨日期</th>
-                    <th>地址</th>
-                    <th>產品/數量</th>
-                    <th>備註</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+        <div id="loading" class="loading">正在連線至 Google Sheets 資料庫...</div>
+        <div id="errorMsg" class="error">查無資料，請確認識別碼或聯繫代理商。</div>
+
+        <div id="resultBox" class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>單號</th>
+                        <th>客人姓名</th>
+                        <th>送貨日期</th>
+                        <th>送貨地址</th>
+                        <th>產品及數量</th>
+                        <th>備註 (Remark)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
-    // 貼上你的 Google Apps Script 部署網址
-    const API_URL = "在此處貼上部署網址";
+    // 這裡填入你剛剛獲得的 Web App 網址
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxNaH1zPAxdSsq8I9b9BDQcnJnAzLx_HuG_iRdGrt8ChdmcnESDwoJD0nz_HVcle2Wx1Q/exec";
 
-    async function queryData() {
-        const sid = document.getElementById('sid').value.trim();
+    async function fetchData() {
+        const sid = document.getElementById('sidInput').value.trim();
         const loading = document.getElementById('loading');
-        const error = document.getElementById('error');
-        const table = document.getElementById('shipmentTable');
+        const error = document.getElementById('errorMsg');
+        const resultBox = document.getElementById('resultBox');
         const tbody = document.getElementById('tableBody');
 
         if (!sid) return;
 
+        // 初始化顯示狀態
         loading.style.display = 'block';
         error.style.display = 'none';
-        table.style.display = 'none';
+        resultBox.style.display = 'none';
 
         try {
-            // 直接呼叫 Google Apps Script Web App
-            const response = await fetch(`${API_URL}?sid=${encodeURIComponent(sid)}`);
+            // 呼叫 Apps Script API 並傳入 sid 參數
+            const response = await fetch(`${WEB_APP_URL}?sid=${encodeURIComponent(sid)}`);
             const data = await response.json();
 
-            if (data.length > 0) {
-                loading.style.display = 'none';
-                table.style.display = 'table';
+            if (data && data.length > 0) {
                 tbody.innerHTML = data.map(item => `
                     <tr>
-                        <td><strong>${item.order_no}</strong></td>
-                        <td>${item.customer}</td>
-                        <td>${item.date}</td>
-                        <td>${item.address}</td>
-                        <td style="color:#1e40af">${item.product}</td>
-                        <td style="color:#64748b; font-size:12px">${item.remark}</td>
+                        <td><strong>${item.order_no || '-'}</strong></td>
+                        <td>${item.customer || '-'}</td>
+                        <td>${item.date || '-'}</td>
+                        <td>${row_address(item.address)}</td>
+                        <td class="product-tag">${item.product || '-'}</td>
+                        <td class="remark-text">${item.remark || '-'}</td>
                     </tr>
                 `).join('');
+                
+                loading.style.display = 'none';
+                resultBox.style.display = 'block';
             } else {
-                throw new Error();
+                throw new Error("No data");
             }
         } catch (e) {
             loading.style.display = 'none';
             error.style.display = 'block';
         }
+    }
+
+    // 處理地址中可能出現的換行或逗號
+    function row_address(addr) {
+        if (!addr) return '-';
+        return addr.toString().replace(/"/g, '');
     }
 </script>
 
