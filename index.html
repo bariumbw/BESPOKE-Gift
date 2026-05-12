@@ -3,104 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>訂單查詢系統 - 實時更新版</title>
+    <title>供應商訂單查詢系統</title>
     <style>
-        :root { --main-blue: #007bff; --bg-gray: #f8f9fa; }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; }
-        .wrapper { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        h2 { text-align: center; color: #333; margin-bottom: 25px; }
-        .search-area { display: flex; gap: 10px; margin-bottom: 20px; }
-        input[type="text"] { flex: 1; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 16px; transition: border-color 0.3s; }
-        input[type="text"]:focus { border-color: var(--main-blue); outline: none; }
-        button { padding: 12px 24px; background: var(--main-blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        button:hover { background: #0056b3; }
+        :root { --primary-hex: #2c3e50; --accent-gold: #c5a059; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary-hex); margin-bottom: 30px; letter-spacing: 1px; }
+        .search-box { position: relative; margin-bottom: 25px; }
+        input[type="password"] { 
+            width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; 
+            font-size: 16px; box-sizing: border-box; transition: all 0.3s;
+            text-align: center; letter-spacing: 2px;
+        }
+        input[type="password"]:focus { border-color: var(--accent-gold); outline: none; box-shadow: 0 0 8px rgba(197,160,89,0.3); }
+        button { 
+            width: 100%; margin-top: 15px; padding: 15px; background: var(--primary-hex); 
+            color: white; border: none; border-radius: 10px; cursor: pointer; 
+            font-size: 16px; font-weight: bold; transition: background 0.3s;
+        }
+        button:hover { background: #1a252f; }
         
-        #status { text-align: center; margin: 10px 0; font-size: 14px; color: #666; }
-        #result-box { margin-top: 20px; display: none; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .info-card { background: #fdfdfd; border: 1px solid #eee; border-radius: 10px; padding: 20px; }
-        .row { display: flex; padding: 12px 0; border-bottom: 1px solid #f1f1f1; }
-        .row:last-child { border-bottom: none; }
-        .label { width: 100px; font-weight: bold; color: #555; font-size: 14px; }
-        .content { flex: 1; color: #222; font-size: 15px; word-break: break-all; }
-        .no-data { color: #dc3545; text-align: center; font-weight: bold; margin-top: 20px; display: none; }
+        #loader { text-align: center; display: none; color: #666; margin: 15px 0; }
+        #result-area { display: none; margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+        .info-row { display: flex; padding: 12px 0; border-bottom: 1px dashed #eee; }
+        .info-row:last-child { border-bottom: none; }
+        .label { width: 110px; color: #7f8c8d; font-size: 14px; font-weight: bold; }
+        .content { flex: 1; color: #2c3e50; font-size: 15px; word-break: break-all; }
+        .error-msg { color: #e74c3c; text-align: center; font-weight: bold; margin-top: 15px; display: none; }
     </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <h2>訂單查詢系統</h2>
-    <div class="search-area">
-        <input type="text" id="userInput" placeholder="請輸入姓名或單號進行查詢...">
-        <button onclick="doQuery()">查詢</button>
+<div class="container">
+    <h2>供應商查詢登入</h2>
+    <div class="search-box">
+        <input type="password" id="supplierKey" placeholder="請輸入供應商識別碼 (Password)">
+        <button onclick="checkAccess()">登入查詢</button>
     </div>
 
-    <div id="status"></div>
-    <div id="noData" class="no-data">查無資料，請核對輸入內容。</div>
+    <div id="loader">連線中...</div>
+    <div id="errorBox" class="error-msg">驗證失敗，請檢查識別碼。</div>
 
-    <div id="result-box">
-        <div class="info-card">
-            <div class="row"><div class="label">下單日期</div><div class="content" id="d_date"></div></div>
-            <div class="row"><div class="label">單號</div><div class="content" id="d_id"></div></div>
-            <div class="row"><div class="label">客人姓名</div><div class="content" id="d_name"></div></div>
-            <div class="row"><div class="label">送貨日期</div><div class="content" id="d_del_date"></div></div>
-            <div class="row"><div class="label">送貨地址</div><div class="content" id="d_address"></div></div>
-            <div class="row"><div class="label">產品及數量</div><div class="content" id="d_products"></div></div>
-            <div class="row"><div class="label">備註</div><div class="content" id="d_remark"></div></div>
-        </div>
+    <div id="result-area">
+        <div class="info-row"><div class="label">下單日期</div><div id="out_B" class="content"></div></div>
+        <div class="info-row"><div class="label">單號</div><div id="out_D" class="content"></div></div>
+        <div class="info-row"><div class="label">客人姓名</div><div id="out_E" class="content"></div></div>
+        <div class="info-row"><div class="label">送貨日期</div><div id="out_F" class="content"></div></div>
+        <div class="info-row"><div class="label">送貨地址</div><div id="out_G" class="content"></div></div>
+        <div class="info-row"><div class="label">產品及數量</div><div id="out_H" class="content"></div></div>
+        <div class="info-row"><div class="label">備註</div><div id="out_I" class="content"></div></div>
     </div>
 </div>
 
 <script>
-    // 您的 CSV 連結
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
+    // CSV 連結
+    const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
 
-    async function doQuery() {
-        const keyword = document.getElementById('userInput').value.trim();
-        const status = document.getElementById('status');
-        const resBox = document.getElementById('result-box');
-        const noData = document.getElementById('noData');
+    async function checkAccess() {
+        const key = document.getElementById('supplierKey').value.trim();
+        const loader = document.getElementById('loader');
+        const errorBox = document.getElementById('errorBox');
+        const resArea = document.getElementById('result-area');
 
-        if (!keyword) { alert("請輸入查詢內容"); return; }
+        if (!key) { alert("請輸入密碼"); return; }
 
-        status.innerText = "正在連線資料庫...";
-        resBox.style.display = "none";
-        noData.style.display = "none";
+        loader.style.display = "block";
+        errorBox.style.display = "none";
+        resArea.style.display = "none";
 
         try {
-            // 每次查詢時強制獲取最新 CSV
-            const response = await fetch(CSV_URL + '&cache_bust=' + Date.now());
-            const text = await response.text();
+            // 強制獲取最新資料
+            const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
+            const data = await resp.text();
             
-            // 解析 CSV 內容
-            const rows = text.split('\n').map(r => r.split(',').map(c => c.replace(/"/g, '').trim()));
-            
-            // 搜尋包含關鍵字的行 (不區分大小寫)
-            const foundRow = rows.find(row => 
-                row.some(cell => cell.toLowerCase().includes(keyword.toLowerCase()))
-            );
+            // 解析 CSV (考慮到逗號可能出現在地址或產品名稱中)
+            const rows = data.split('\n').map(row => {
+                // 簡單解析 CSV 邏輯
+                return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            });
 
-            if (foundRow) {
-                // 對應您的欄位順序：0日期, 1單號, 2姓名, 3送貨日, 4地址, 5產品, 6備註
-                document.getElementById('d_date').innerText = foundRow[0] || '-';
-                document.getElementById('d_id').innerText = foundRow[1] || '-';
-                document.getElementById('d_name').innerText = foundRow[2] || '-';
-                document.getElementById('d_del_date').innerText = foundRow[3] || '-';
-                document.getElementById('d_address').innerText = foundRow[4] || '-';
-                document.getElementById('d_products').innerText = foundRow[5] || '-';
-                document.getElementById('d_remark').innerText = foundRow[6] || '-';
+            // 搜尋 C 欄 (索引為 2) 符合 password 的行
+            const match = rows.find(r => r[2] && r[2].replace(/"/g, '').trim() === key);
+
+            if (match) {
+                // 顯示對應欄位 (0=A, 1=B, 2=C, 3=D...)
+                document.getElementById('out_B').innerText = clean(match[1]); // 下單日期
+                document.getElementById('out_D').innerText = clean(match[3]); // 單號
+                document.getElementById('out_E').innerText = clean(match[4]); // 姓名
+                document.getElementById('out_F').innerText = clean(match[5]); // 送貨日期
+                document.getElementById('out_G').innerText = clean(match[6]); // 地址
+                document.getElementById('out_H').innerText = clean(match[7]); // 產品數量
+                document.getElementById('out_I').innerText = clean(match[8]); // 備註
                 
-                resBox.style.display = "block";
-                status.innerText = "查詢成功";
+                resArea.style.display = "block";
             } else {
-                noData.style.display = "block";
-                status.innerText = "";
+                errorBox.style.display = "block";
             }
-        } catch (err) {
-            status.innerText = "連線失敗，請確認 Google Sheet 是否已開啟 CSV 發佈。";
-            console.error(err);
+        } catch (e) {
+            alert("讀取失敗，請檢查網路或確認 Google Sheet 已發佈。");
+        } finally {
+            loader.style.display = "none";
         }
+    }
+
+    function clean(str) {
+        return str ? str.replace(/"/g, '').trim() : '-';
     }
 </script>
 
