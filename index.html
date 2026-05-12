@@ -5,39 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>供應商管理系統</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #c5a059; --bg: #f4f7f6; --success: #27ae60; }
+        :root { --primary: #2c3e50; --bg: #f4f7f6; --success: #27ae60; }
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
         .container { max-width: 900px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-        
-        /* LOGO 樣式 (已縮小 50%) */
         .header-logo { width: 90px; margin-bottom: 15px; display: block; }
-        
         #login-section { text-align: center; padding: 30px 0; }
         .login-box { max-width: 350px; margin: 0 auto; }
-        
         #control-panel { display: none; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #eee; }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
-        
         .btn-group { display: flex; gap: 8px; }
         input, button { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; }
-        button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
+        button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; }
         .btn-reload { background: var(--success); }
         .btn-logout { background: #95a5a6; }
-
         .order-card { background: #fff; border: 1px solid #eef0f2; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--primary); }
         .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
-        
-        .label { font-size: 12px; color: #999; font-weight: bold; margin-bottom: 2px; display: block; }
-        .val { font-size: 15px; color: #333; word-break: break-all; }
+        .label { font-size: 12px; color: #999; font-weight: bold; }
+        .val { font-size: 15px; color: #333; white-space: pre-wrap; }
         .full { grid-column: span 2; }
-        @media (max-width: 600px) { .full { grid-column: span 1; } }
-
-        h2, h4 { margin-top: 0; color: var(--primary); }
-        .count-tag { font-size: 14px; color: #666; margin-bottom: 10px; }
-        
-        .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-right: 5px; }
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } .full { grid-column: span 1; } }
+        .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 5px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -51,7 +38,7 @@
         <div class="login-box">
             <input type="text" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:10px;">
             <button id="loginBtn" onclick="doLogin()" style="width:100%;">驗證並讀取資料</button>
-            <p id="login-msg" style="color:red; font-size:14px; display:none; margin-top:10px;">找不到此識別碼，請檢查大小寫或等候 5 分鐘再試</p>
+            <p id="login-msg" style="color:red; font-size:14px; display:none; margin-top:10px;">找不到此識別碼，請確認第 14 列後的資料格式是否正確</p>
         </div>
     </div>
 
@@ -59,69 +46,56 @@
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
             <h4>訂單資料篩選器</h4>
             <div class="btn-group">
-                <button class="btn-reload" id="reloadBtn" onclick="reloadData()">重新載入最新資料</button>
+                <button class="btn-reload" id="reloadBtn" onclick="reloadData()">更新資料</button>
                 <button class="btn-logout" onclick="location.reload()">登出</button>
             </div>
         </div>
         <div class="filter-grid">
-            <div>
-                <span class="label">送貨日期 (起)</span>
-                <input type="date" id="filter-start" onchange="applyFilters()">
-            </div>
-            <div>
-                <span class="label">送貨日期 (迄)</span>
-                <input type="date" id="filter-end" onchange="applyFilters()">
-            </div>
-            <div>
-                <span class="label">客人姓名</span>
-                <input type="text" id="filter-name" placeholder="搜尋姓名..." oninput="applyFilters()">
-            </div>
-            <div>
-                <span class="label">單號</span>
-                <input type="text" id="filter-id" placeholder="搜尋單號..." oninput="applyFilters()">
-            </div>
+            <div><span class="label">送貨日期 (起)</span><input type="date" id="filter-start" onchange="applyFilters()"></div>
+            <div><span class="label">送貨日期 (迄)</span><input type="date" id="filter-end" onchange="applyFilters()"></div>
+            <div><span class="label">客人姓名</span><input type="text" id="filter-name" placeholder="搜尋姓名..." oninput="applyFilters()"></div>
+            <div><span class="label">單號</span><input type="text" id="filter-id" placeholder="搜尋單號..." oninput="applyFilters()"></div>
         </div>
     </div>
 
-    <div id="status-msg" class="count-tag"></div>
+    <div id="status-msg" style="margin-top: 10px; font-size: 14px; color: #666;"></div>
     <div id="result-list"></div>
 </div>
 
 <script>
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
-    
     let allSupplierData = [];
     let currentKey = "";
 
-    function parseCSV(text) {
-        const rows = [];
-        const lines = text.split(/\r?\n/);
-        const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
-        for (let line of lines) {
-            if (line.trim()) {
-                const columns = line.split(regex).map(col => col.replace(/^"|"$/g, '').trim());
-                rows.push(columns);
-            }
+    // 【核心修正】專業級 CSV 解析函數，專門處理包含換行、引號與逗號的複雜儲存格
+    function parseCSVStrict(str) {
+        const arr = [];
+        let quote = false;
+        for (let row = col = c = 0; c < str.length; c++) {
+            let cc = str[c], nc = str[c+1];
+            arr[row] = arr[row] || [];
+            arr[row][col] = arr[row][col] || '';
+            if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
+            if (cc == '"') { quote = !quote; continue; }
+            if (cc == ',' && !quote) { ++col; continue; }
+            if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
+            if (cc == '\n' && !quote) { ++row; col = 0; continue; }
+            if (cc == '\r' && !quote) { ++row; col = 0; continue; }
+            arr[row][col] += cc;
         }
-        return rows;
+        return arr;
     }
 
     function parseDateSmart(dateStr) {
         if (!dateStr || dateStr === '-' || dateStr.trim() === "") return null;
         let d = new Date(dateStr);
         if (!isNaN(d.getTime())) return d;
-        const chineseMatch = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-        if (chineseMatch) return new Date(parseInt(chineseMatch[1]), parseInt(chineseMatch[2]) - 1, parseInt(chineseMatch[3]));
-        let parts = dateStr.split(/[\/\-]/);
-        if (parts.length === 3) {
-            let p0 = parseInt(parts[0]), p1 = parseInt(parts[1]), p2 = parseInt(parts[2]);
-            if (p0 <= 31 && p2 > 1000) return new Date(p2, p1 - 1, p0);
-            if (p0 > 1000) return new Date(p0, p1 - 1, p2);
-        }
-        return null; 
+        const m = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+        if (m) return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
+        return null;
     }
 
-    function formatDateChinese(dateStr) {
+    function formatDate(dateStr) {
         const d = parseDateSmart(dateStr);
         return d ? `${d.getFullYear()}年${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日` : (dateStr || '-');
     }
@@ -130,14 +104,11 @@
         try {
             const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
             const text = await resp.text();
-            const rows = parseCSV(text);
+            const rows = parseCSVStrict(text);
             
-            const searchKey = currentKey.trim().toLowerCase();
-            allSupplierData = rows.filter(r => {
-                if (!r[2]) return false;
-                const sheetID = r[2].replace(/["']/g, '').trim().toLowerCase();
-                return sheetID === searchKey;
-            });
+            const sk = currentKey.trim().toLowerCase();
+            // C 欄位在 Index 2
+            allSupplierData = rows.filter(r => r[2] && r[2].trim().toLowerCase() === sk);
             return allSupplierData.length > 0;
         } catch (e) { return false; }
     }
@@ -146,10 +117,8 @@
         currentKey = document.getElementById('supplierKey').value.trim();
         if (!currentKey) return;
         const btn = document.getElementById('loginBtn');
-        document.getElementById('login-msg').style.display = "none";
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span> 驗證中...';
-        
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
@@ -164,58 +133,55 @@
     async function reloadData() {
         const btn = document.getElementById('reloadBtn');
         btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spin"></span> 更新中...';
+        btn.innerHTML = '<span class="loading-spin"></span>';
         await loadDataFromServer();
         applyFilters();
-        setTimeout(() => { btn.disabled = false; btn.innerText = "重新載入最新資料"; }, 500);
+        setTimeout(() => { btn.disabled = false; btn.innerText = "更新資料"; }, 500);
     }
 
     function applyFilters() {
-        const startVal = document.getElementById('filter-start').value;
-        const endVal = document.getElementById('filter-end').value;
-        const nameKwd = document.getElementById('filter-name').value.toLowerCase();
-        const idKwd = document.getElementById('filter-id').value.toLowerCase();
-        const startTime = startVal ? new Date(startVal).setHours(0,0,0,0) : null;
-        const endTime = endVal ? new Date(endVal).setHours(23,59,59,999) : null;
+        const start = document.getElementById('filter-start').value;
+        const end = document.getElementById('filter-end').value;
+        const nameK = document.getElementById('filter-name').value.toLowerCase();
+        const idK = document.getElementById('filter-id').value.toLowerCase();
+        
+        const sTime = start ? new Date(start).setHours(0,0,0,0) : null;
+        const eTime = end ? new Date(end).setHours(23,59,59,999) : null;
 
-        const filtered = allSupplierData.filter(row => {
-            const rawDelDate = row[5] || "";
-            const name = (row[4] || "").toLowerCase();
-            const orderId = (row[3] || "").toLowerCase();
-            let dateMatch = true;
-            const dObj = parseDateSmart(rawDelDate);
-            if (startTime || endTime) {
-                if (dObj) {
-                    const dTime = dObj.getTime();
-                    if (startTime && dTime < startTime) dateMatch = false;
-                    if (endTime && dTime > endTime) dateMatch = false;
-                } else { dateMatch = false; }
+        const filtered = allSupplierData.filter(r => {
+            const d = parseDateSmart(r[5]);
+            let dM = true;
+            if (sTime || eTime) {
+                if (d) {
+                    const t = d.getTime();
+                    if (sTime && t < sTime) dM = false;
+                    if (eTime && t > eTime) dM = false;
+                } else { dM = false; }
             }
-            return dateMatch && name.includes(nameKwd) && orderId.includes(idKwd);
+            return dM && (r[4]||"").toLowerCase().includes(nameK) && (r[3]||"").toLowerCase().includes(idK);
         });
         renderList(filtered);
     }
 
     function renderList(data) {
-        const listArea = document.getElementById('result-list');
-        listArea.innerHTML = "";
-        document.getElementById('status-msg').innerText = `顯示筆數：${data.length}`;
-        data.forEach(row => {
+        const area = document.getElementById('result-list');
+        area.innerHTML = "";
+        document.getElementById('status-msg').innerText = `找到 ${data.length} 筆相關訂單`;
+        data.forEach(r => {
             const card = document.createElement('div');
             card.className = 'order-card';
-            const cleanData = (val) => val ? val.replace(/^"|"$/g, '').trim() : '-';
             card.innerHTML = `
                 <div class="info-grid">
-                    <div class="item"><span class="label">下單日期</span><div class="val">${formatDateChinese(cleanData(row[1]))}</div></div>
-                    <div class="item"><span class="label">單號</span><div class="val">${cleanData(row[3])}</div></div>
-                    <div class="item"><span class="label">客人姓名</span><div class="val">${cleanData(row[4])}</div></div>
-                    <div class="item"><span class="label">送貨日期</span><div class="val">${formatDateChinese(cleanData(row[5]))}</div></div>
-                    <div class="item full"><span class="label">送貨地址</span><div class="val">${cleanData(row[6])}</div></div>
-                    <div class="item full"><span class="label">產品及數量</span><div class="val">${cleanData(row[7])}</div></div>
-                    <div class="item full"><span class="label">備註</span><div class="val">${cleanData(row[8])}</div></div>
+                    <div class="item"><span class="label">下單日期</span><div class="val">${formatDate(r[1])}</div></div>
+                    <div class="item"><span class="label">單號</span><div class="val">${r[3] || '-'}</div></div>
+                    <div class="item"><span class="label">客人姓名</span><div class="val">${r[4] || '-'}</div></div>
+                    <div class="item"><span class="label">送貨日期</span><div class="val">${formatDate(r[5])}</div></div>
+                    <div class="item full"><span class="label">送貨地址</span><div class="val">${r[6] || '-'}</div></div>
+                    <div class="item full"><span class="label">產品及數量</span><div class="val">${r[7] || '-'}</div></div>
+                    <div class="item full"><span class="label">備註</span><div class="val">${r[8] || '-'}</div></div>
                 </div>
             `;
-            listArea.appendChild(card);
+            area.appendChild(card);
         });
     }
 </script>
