@@ -3,106 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>供應商訂單查詢系統</title>
+    <title>供應商訂單查詢系統 (多筆顯示版)</title>
     <style>
-        :root { --primary-hex: #2c3e50; --accent-gold: #c5a059; }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: var(--primary-hex); margin-bottom: 30px; letter-spacing: 1px; }
-        .search-box { position: relative; margin-bottom: 25px; }
+        :root { --primary-hex: #2c3e50; --accent-gold: #c5a059; --bg-gray: #f4f4f9; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg-gray); margin: 0; padding: 10px; }
+        .container { max-width: 800px; margin: 20px auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary-hex); margin-bottom: 25px; }
+        
+        .search-area { max-width: 400px; margin: 0 auto 30px; text-align: center; }
         input[type="password"] { 
-            width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; 
-            font-size: 16px; box-sizing: border-box; transition: all 0.3s;
-            text-align: center; letter-spacing: 2px;
+            width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; 
+            font-size: 16px; box-sizing: border-box; text-align: center; letter-spacing: 2px;
         }
-        input[type="password"]:focus { border-color: var(--accent-gold); outline: none; box-shadow: 0 0 8px rgba(197,160,89,0.3); }
         button { 
-            width: 100%; margin-top: 15px; padding: 15px; background: var(--primary-hex); 
-            color: white; border: none; border-radius: 10px; cursor: pointer; 
-            font-size: 16px; font-weight: bold; transition: background 0.3s;
+            width: 100%; margin-top: 10px; padding: 12px; background: var(--primary-hex); 
+            color: white; border: none; border-radius: 8px; cursor: pointer; 
+            font-size: 16px; font-weight: bold; transition: 0.3s;
         }
         button:hover { background: #1a252f; }
-        
-        #loader { text-align: center; display: none; color: #666; margin: 15px 0; }
-        #result-area { display: none; margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
-        .info-row { display: flex; padding: 12px 0; border-bottom: 1px dashed #eee; }
-        .info-row:last-child { border-bottom: none; }
-        .label { width: 110px; color: #7f8c8d; font-size: 14px; font-weight: bold; }
-        .content { flex: 1; color: #2c3e50; font-size: 15px; word-break: break-all; }
-        .error-msg { color: #e74c3c; text-align: center; font-weight: bold; margin-top: 15px; display: none; }
+
+        #status { text-align: center; color: #666; margin-bottom: 10px; font-size: 14px; }
+        #errorBox { color: #e74c3c; text-align: center; font-weight: bold; display: none; margin-bottom: 20px; }
+
+        /* 多筆資料的卡片樣式 */
+        .order-card { 
+            background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; 
+            margin-bottom: 20px; padding: 15px; position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+        .order-card:nth-child(even) { border-left: 5px solid var(--accent-gold); }
+        .order-card:nth-child(odd) { border-left: 5px solid var(--primary-hex); }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+
+        .item { margin-bottom: 8px; }
+        .label { font-size: 12px; color: #888; font-weight: bold; display: block; margin-bottom: 2px; }
+        .val { font-size: 15px; color: #333; word-break: break-all; }
+        .full-width { grid-column: span 2; }
+        @media (max-width: 600px) { .full-width { grid-column: span 1; } }
+
+        .badge { display: inline-block; padding: 2px 8px; background: #eee; border-radius: 4px; font-size: 12px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>供應商查詢登入</h2>
-    <div class="search-box">
-        <input type="password" id="supplierKey" placeholder="請輸入供應商識別碼 (Password)">
-        <button onclick="checkAccess()">登入查詢</button>
+    <h2>供應商訂單查詢</h2>
+    <div class="search-area">
+        <input type="password" id="supplierKey" placeholder="請輸入供應商識別碼">
+        <button onclick="fetchAndShow()">登入查詢</button>
     </div>
 
-    <div id="loader">連線中...</div>
-    <div id="errorBox" class="error-msg">驗證失敗，請檢查識別碼。</div>
-
-    <div id="result-area">
-        <div class="info-row"><div class="label">下單日期</div><div id="out_B" class="content"></div></div>
-        <div class="info-row"><div class="label">單號</div><div id="out_D" class="content"></div></div>
-        <div class="info-row"><div class="label">客人姓名</div><div id="out_E" class="content"></div></div>
-        <div class="info-row"><div class="label">送貨日期</div><div id="out_F" class="content"></div></div>
-        <div class="info-row"><div class="label">送貨地址</div><div id="out_G" class="content"></div></div>
-        <div class="info-row"><div class="label">產品及數量</div><div id="out_H" class="content"></div></div>
-        <div class="info-row"><div class="label">備註</div><div id="out_I" class="content"></div></div>
-    </div>
+    <div id="status"></div>
+    <div id="errorBox">查無資料，請核對識別碼。</div>
+    <div id="result-list"></div>
 </div>
 
 <script>
-    // CSV 連結
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
 
-    async function checkAccess() {
+    async function fetchAndShow() {
         const key = document.getElementById('supplierKey').value.trim();
-        const loader = document.getElementById('loader');
+        const status = document.getElementById('status');
         const errorBox = document.getElementById('errorBox');
-        const resArea = document.getElementById('result-area');
+        const listArea = document.getElementById('result-list');
 
         if (!key) { alert("請輸入密碼"); return; }
 
-        loader.style.display = "block";
+        status.innerText = "資料同步中...";
         errorBox.style.display = "none";
-        resArea.style.display = "none";
+        listArea.innerHTML = "";
 
         try {
-            // 強制獲取最新資料
             const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
-            const data = await resp.text();
+            const text = await resp.text();
             
-            // 解析 CSV (考慮到逗號可能出現在地址或產品名稱中)
-            const rows = data.split('\n').map(row => {
-                // 簡單解析 CSV 邏輯
+            // 解析 CSV 每一行
+            const rows = text.split('\n').map(row => {
                 return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
             });
 
-            // 搜尋 C 欄 (索引為 2) 符合 password 的行
-            const match = rows.find(r => r[2] && r[2].replace(/"/g, '').trim() === key);
+            // 找出所有符合 C 欄 (索引 2) 的資料
+            const matches = rows.filter(r => r[2] && r[2].replace(/"/g, '').trim() === key);
 
-            if (match) {
-                // 顯示對應欄位 (0=A, 1=B, 2=C, 3=D...)
-                document.getElementById('out_B').innerText = clean(match[1]); // 下單日期
-                document.getElementById('out_D').innerText = clean(match[3]); // 單號
-                document.getElementById('out_E').innerText = clean(match[4]); // 姓名
-                document.getElementById('out_F').innerText = clean(match[5]); // 送貨日期
-                document.getElementById('out_G').innerText = clean(match[6]); // 地址
-                document.getElementById('out_H').innerText = clean(match[7]); // 產品數量
-                document.getElementById('out_I').innerText = clean(match[8]); // 備註
+            if (matches.length > 0) {
+                status.innerText = `找到 ${matches.length} 筆資料`;
                 
-                resArea.style.display = "block";
+                matches.forEach((row, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'order-card';
+                    card.innerHTML = `
+                        <div class="badge">項目 #${index + 1}</div>
+                        <div class="info-grid">
+                            <div class="item"><span class="label">下單日期</span><div class="val">${clean(row[1])}</div></div>
+                            <div class="item"><span class="label">單號</span><div class="val">${clean(row[3])}</div></div>
+                            <div class="item"><span class="label">客人姓名</span><div class="val">${clean(row[4])}</div></div>
+                            <div class="item"><span class="label">送貨日期</span><div class="val">${clean(row[5])}</div></div>
+                            <div class="item full-width"><span class="label">送貨地址</span><div class="val">${clean(row[6])}</div></div>
+                            <div class="item full-width"><span class="label">產品及數量</span><div class="val">${clean(row[7])}</div></div>
+                            <div class="item full-width"><span class="label">備註</span><div class="val">${clean(row[8])}</div></div>
+                        </div>
+                    `;
+                    listArea.appendChild(card);
+                });
             } else {
                 errorBox.style.display = "block";
+                status.innerText = "";
             }
         } catch (e) {
-            alert("讀取失敗，請檢查網路或確認 Google Sheet 已發佈。");
-        } finally {
-            loader.style.display = "none";
+            status.innerText = "系統連線錯誤，請稍後再試。";
         }
     }
 
