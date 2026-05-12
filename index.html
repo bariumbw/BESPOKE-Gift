@@ -30,8 +30,11 @@
         button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
         button:hover { opacity: 0.8; }
         .btn-reload { background: var(--success); color: white; }
-        .btn-sort { background: #dcdde1; color: #2f3640; border: 1px solid #bdc3c7; }
+        .btn-sort { background: #fff; color: var(--primary); border: 1px solid var(--accent); padding: 6px 12px; font-size: 13px; }
         .btn-logout { background: #bdc3c7; }
+
+        /* 新增：排序按鈕與筆數同一行且置右 */
+        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 5px; }
 
         .order-card { background: #fff; border: 1px solid #f2e1e4; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--accent); }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -42,7 +45,7 @@
         @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
 
         h2, h4 { margin-top: 0; color: var(--primary); }
-        .count-tag { font-size: 14px; color: #999; margin-bottom: 10px; }
+        .count-tag { font-size: 14px; color: #999; }
         
         .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 5px; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -66,7 +69,6 @@
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
             <h4>訂單篩選</h4>
             <div class="btn-group">
-                <button class="btn-sort" onclick="sortDataByDate()">送貨日期排序：近至遠</button>
                 <button class="btn-reload" id="reloadBtn" onclick="reloadData()">更新資料</button>
                 <button class="btn-logout" onclick="location.reload()">登出</button>
             </div>
@@ -79,7 +81,11 @@
         </div>
     </div>
 
-    <div id="status-msg" class="count-tag"></div>
+    <div id="result-header" class="status-bar" style="display:none;">
+        <div id="status-msg" class="count-tag"></div>
+        <button class="btn-sort" onclick="sortDataByDate()">送貨日期排序：近至遠</button>
+    </div>
+    
     <div id="result-list"></div>
 </div>
 
@@ -87,7 +93,7 @@
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
     let allSupplierData = [];
     let currentKey = "";
-    let filteredData = []; // 用於排序的快取資料
+    let filteredData = [];
 
     function parseCSVStrict(str) {
         const arr = [];
@@ -142,6 +148,7 @@
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
+            document.getElementById('result-header').style.display = "flex";
             
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('filter-start').value = today;
@@ -163,14 +170,13 @@
         setTimeout(() => { btn.disabled = false; btn.innerText = "更新資料"; }, 500);
     }
 
-    // 排序功能：送貨日期近至遠
     function sortDataByDate() {
         filteredData.sort((a, b) => {
             const dA = parseDateSmart(a[5]);
             const dB = parseDateSmart(b[5]);
             const tA = dA ? dA.getTime() : 0;
             const tB = dB ? dB.getTime() : 0;
-            return tB - tA; // 近至遠 (降序)
+            return tB - tA;
         });
         renderList(filteredData);
     }
@@ -180,7 +186,6 @@
         const end = document.getElementById('filter-end').value;
         const nameK = document.getElementById('filter-name').value.toLowerCase();
         const idK = document.getElementById('filter-id').value.toLowerCase();
-        
         const sTime = start ? new Date(start).setHours(0,0,0,0) : null;
         const eTime = end ? new Date(end).setHours(23,59,59,999) : null;
 
