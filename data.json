@@ -1,0 +1,20 @@
+[
+    {
+        "supplier_id": "SV881",
+        "supplier_name": "宏達貿易",
+        "order_no": "ORD20260501",
+        "customer_name": "王小明",
+        "delivery_date": "2026-05-15",
+        "address": "台北市大安區忠孝東路四段1號",
+        "remark": "管理室代收"
+    },
+    {
+        "supplier_id": "SV882",
+        "supplier_name": "星宇物流",
+        "order_no": "ORD20260502",
+        "customer_name": "李小華",
+        "delivery_date": "2026-05-16",
+        "address": "台中市西屯區台灣大道三段99號",
+        "remark": "送貨前請先電聯"
+    }
+]
