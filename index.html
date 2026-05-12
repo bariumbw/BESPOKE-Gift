@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BESPOKE MALL 回禮 - 供應商管理系統</title>
+    <title>供應商系統</title>
     <style>
         :root { 
             --primary: #7f8c8d;    /* 深灰色 */
@@ -24,12 +24,13 @@
         #control-panel { display: none; background: #fef9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #f2e1e4; }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
         
-        .btn-group { display: flex; gap: 8px; }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
         input, button { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; }
         
         button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
         button:hover { opacity: 0.8; }
         .btn-reload { background: var(--success); color: white; }
+        .btn-sort { background: #dcdde1; color: #2f3640; border: 1px solid #bdc3c7; }
         .btn-logout { background: #bdc3c7; }
 
         .order-card { background: #fff; border: 1px solid #f2e1e4; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--accent); }
@@ -53,10 +54,10 @@
     <img src="https://www.bespoke-mall.com/pub/media/webp_image/logo/stores/1/BespokeMallv4.webp" alt="LOGO" class="header-logo">
 
     <div id="login-section">
-        <h2>BESPOKE MALL 回禮 - 供應商管理系統</h2>
+        <h2>供應商系統</h2>
         <div class="login-box">
             <input type="text" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:10px; border-color: #f2e1e4;">
-            <button id="loginBtn" onclick="doLogin()" style="width:100%;">驗證並讀取資料</button>
+            <button id="loginBtn" onclick="doLogin()" style="width:100%;">登入</button>
             <p id="login-msg" style="color:#e8aeb7; font-size:14px; display:none; margin-top:10px; font-weight: bold;">找不到此識別碼，請確認資料格式</p>
         </div>
     </div>
@@ -65,6 +66,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
             <h4>訂單篩選</h4>
             <div class="btn-group">
+                <button class="btn-sort" onclick="sortDataByDate()">送貨日期排序：近至遠</button>
                 <button class="btn-reload" id="reloadBtn" onclick="reloadData()">更新資料</button>
                 <button class="btn-logout" onclick="location.reload()">登出</button>
             </div>
@@ -85,6 +87,7 @@
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
     let allSupplierData = [];
     let currentKey = "";
+    let filteredData = []; // 用於排序的快取資料
 
     function parseCSVStrict(str) {
         const arr = [];
@@ -134,13 +137,12 @@
         if (!currentKey) return;
         const btn = document.getElementById('loginBtn');
         btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spin"></span> 載入中...';
+        btn.innerHTML = '<span class="loading-spin"></span> 登入中...';
         
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
             
-            // 【核心修正】登入後預設日期為今天
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('filter-start').value = today;
             
@@ -148,7 +150,7 @@
         } else {
             document.getElementById('login-msg').style.display = "block";
             btn.disabled = false;
-            btn.innerText = "驗證並讀取資料";
+            btn.innerText = "登入";
         }
     }
 
@@ -161,31 +163,40 @@
         setTimeout(() => { btn.disabled = false; btn.innerText = "更新資料"; }, 500);
     }
 
+    // 排序功能：送貨日期近至遠
+    function sortDataByDate() {
+        filteredData.sort((a, b) => {
+            const dA = parseDateSmart(a[5]);
+            const dB = parseDateSmart(b[5]);
+            const tA = dA ? dA.getTime() : 0;
+            const tB = dB ? dB.getTime() : 0;
+            return tB - tA; // 近至遠 (降序)
+        });
+        renderList(filteredData);
+    }
+
     function applyFilters() {
         const start = document.getElementById('filter-start').value;
         const end = document.getElementById('filter-end').value;
         const nameK = document.getElementById('filter-name').value.toLowerCase();
         const idK = document.getElementById('filter-id').value.toLowerCase();
         
-        // 將時間設定為該日期的 00:00:00，確保包含當天
         const sTime = start ? new Date(start).setHours(0,0,0,0) : null;
         const eTime = end ? new Date(end).setHours(23,59,59,999) : null;
 
-        const filtered = allSupplierData.filter(r => {
-            const d = parseDateSmart(r[5]); // 送貨日期在第 5 欄
+        filteredData = allSupplierData.filter(r => {
+            const d = parseDateSmart(r[5]);
             let dM = true;
             if (sTime || eTime) {
                 if (d) {
                     const t = d.getTime();
                     if (sTime && t < sTime) dM = false;
                     if (eTime && t > eTime) dM = false;
-                } else { 
-                    dM = false; // 如果沒有日期或日期格式錯誤，在日期篩選模式下不顯示
-                }
+                } else { dM = false; }
             }
             return dM && (r[4]||"").toLowerCase().includes(nameK) && (r[3]||"").toLowerCase().includes(idK);
         });
-        renderList(filtered);
+        renderList(filteredData);
     }
 
     function renderList(data) {
