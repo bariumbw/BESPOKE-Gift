@@ -40,7 +40,7 @@
         <div class="login-box">
             <input type="password" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:10px;">
             <button id="loginBtn" onclick="doLogin()" style="width:100%;">驗證並讀取資料</button>
-            <p id="login-msg" style="color:red; font-size:14px; display:none; margin-top:10px;">找不到此識別碼，請確認後再試</p>
+            <p id="login-msg" style="color:red; font-size:14px; display:none; margin-top:10px;">找不到此識別碼，請檢查大小寫或等候 5 分鐘再試</p>
         </div>
     </div>
 
@@ -69,12 +69,10 @@
     let allSupplierData = [];
     let currentKey = "";
 
-    // 高階 CSV 解析器：防止因儲存格內含逗號導致的位移
     function parseCSV(text) {
         const rows = [];
         const lines = text.split(/\r?\n/);
         const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
-        
         for (let line of lines) {
             if (line.trim()) {
                 const columns = line.split(regex).map(col => col.replace(/^"|"$/g, '').trim());
@@ -84,6 +82,7 @@
         return rows;
     }
 
+    // 格式化顯示用
     function parseDateSmart(dateStr) {
         if (!dateStr || dateStr === '-' || dateStr.trim() === "") return null;
         let d = new Date(dateStr);
@@ -109,8 +108,15 @@
             const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
             const text = await resp.text();
             const rows = parseCSV(text);
-            // 比對 C 欄 (Index 2)
-            allSupplierData = rows.filter(r => r[2] && r[2] === currentKey);
+            
+            // 【終極比對修正】忽略引號、空格、不分大小寫
+            const searchKey = currentKey.trim().toLowerCase();
+            allSupplierData = rows.filter(r => {
+                if (!r[2]) return false;
+                const sheetID = r[2].replace(/["']/g, '').trim().toLowerCase();
+                return sheetID === searchKey;
+            });
+
             return allSupplierData.length > 0;
         } catch (e) { return false; }
     }
@@ -121,7 +127,8 @@
         const btn = document.getElementById('loginBtn');
         document.getElementById('login-msg').style.display = "none";
         btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spin"></span> 讀取中...';
+        btn.innerHTML = '<span class="loading-spin"></span> 驗證中...';
+        
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
@@ -175,15 +182,16 @@
         data.forEach(row => {
             const card = document.createElement('div');
             card.className = 'order-card';
+            const cleanData = (val) => val ? val.replace(/^"|"$/g, '').trim() : '-';
             card.innerHTML = `
                 <div class="info-grid">
-                    <div class="item"><span class="label">下單日期</span><div class="val">${formatDateChinese(row[1])}</div></div>
-                    <div class="item"><span class="label">單號</span><div class="val">${row[3] || '-'}</div></div>
-                    <div class="item"><span class="label">客人姓名</span><div class="val">${row[4] || '-'}</div></div>
-                    <div class="item"><span class="label">送貨日期</span><div class="val">${formatDateChinese(row[5])}</div></div>
-                    <div class="item full"><span class="label">送貨地址</span><div class="val">${row[6] || '-'}</div></div>
-                    <div class="item full"><span class="label">產品及數量</span><div class="val">${row[7] || '-'}</div></div>
-                    <div class="item full"><span class="label">備註</span><div class="val">${row[8] || '-'}</div></div>
+                    <div class="item"><span class="label">下單日期</span><div class="val">${formatDateChinese(cleanData(row[1]))}</div></div>
+                    <div class="item"><span class="label">單號</span><div class="val">${cleanData(row[3])}</div></div>
+                    <div class="item"><span class="label">客人姓名</span><div class="val">${cleanData(row[4])}</div></div>
+                    <div class="item"><span class="label">送貨日期</span><div class="val">${formatDateChinese(cleanData(row[5]))}</div></div>
+                    <div class="item full"><span class="label">送貨地址</span><div class="val">${cleanData(row[6])}</div></div>
+                    <div class="item full"><span class="label">產品及數量</span><div class="val">${cleanData(row[7])}</div></div>
+                    <div class="item full"><span class="label">備註</span><div class="val">${cleanData(row[8])}</div></div>
                 </div>
             `;
             listArea.appendChild(card);
