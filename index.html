@@ -34,7 +34,6 @@
         h2, h4 { margin-top: 0; color: var(--primary); }
         .count-tag { font-size: 14px; color: #666; margin-bottom: 10px; }
         
-        /* 載入動畫 */
         .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-right: 5px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -89,28 +88,33 @@
     let allSupplierData = [];
     let currentKey = "";
 
-    // 日期格式化：2025年07月25日
+    // 格式化顯示用：2025年07月25日
     function formatDateChinese(dateStr) {
         if (!dateStr || dateStr === '-' || dateStr.trim() === "") return '-';
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return dateStr;
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}年${month}月${day}日`;
+        return `${d.getFullYear()}年${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日`;
+    }
+
+    // 核心資料讀取
+    async function loadDataFromServer() {
+        try {
+            const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
+            const text = await resp.text();
+            const rows = text.split('\n').map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
+            allSupplierData = rows.filter(r => r[2] && r[2].replace(/"/g, '').trim() === currentKey);
+            return allSupplierData.length > 0;
+        } catch (e) { return false; }
     }
 
     async function doLogin() {
         currentKey = document.getElementById('supplierKey').value.trim();
         if (!currentKey) return;
-        
         const btn = document.getElementById('loginBtn');
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span> 讀取中...';
 
-        const success = await loadDataFromServer();
-        
-        if (success) {
+        if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
             applyFilters();
@@ -121,43 +125,25 @@
         }
     }
 
-    // 核心抓取資料功能
-    async function loadDataFromServer() {
-        try {
-            // 使用 t=Date.now() 破解瀏覽器快取，確保拿到最新版 Google Sheet
-            const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
-            const text = await resp.text();
-            const rows = text.split('\n').map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
-
-            allSupplierData = rows.filter(r => r[2] && r[2].replace(/"/g, '').trim() === currentKey);
-            return allSupplierData.length > 0;
-        } catch (e) {
-            console.error(e);
-            return false;
-        }
-    }
-
-    // 「重新載入」按鈕點擊事件
     async function reloadData() {
         const btn = document.getElementById('reloadBtn');
-        const originalText = btn.innerText;
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span> 更新中...';
-
         await loadDataFromServer();
         applyFilters();
-
-        setTimeout(() => {
-            btn.disabled = false;
-            btn.innerText = originalText;
-        }, 500);
+        setTimeout(() => { btn.disabled = false; btn.innerText = "重新載入最新資料"; }, 500);
     }
 
+    // 修正後的過濾邏輯
     function applyFilters() {
-        const start = document.getElementById('filter-start').value;
-        const end = document.getElementById('filter-end').value;
+        const startStr = document.getElementById('filter-start').value;
+        const endStr = document.getElementById('filter-end').value;
         const nameKwd = document.getElementById('filter-name').value.toLowerCase();
         const idKwd = document.getElementById('filter-id').value.toLowerCase();
+
+        // 建立精確的時間戳進行比對
+        const startTime = startStr ? new Date(startStr).setHours(0,0,0,0) : null;
+        const endTime = endStr ? new Date(endStr).setHours(23,59,59,999) : null;
 
         const filtered = allSupplierData.filter(row => {
             const rawDelivDate = row[5] ? row[5].replace(/"/g, '').trim() : "";
@@ -165,9 +151,18 @@
             const orderId = row[3] ? row[3].replace(/"/g, '').trim().toLowerCase() : "";
 
             let dateMatch = true;
-            const dObj = new Date(rawDelivDate);
-            if (start && dObj < new Date(start)) dateMatch = false;
-            if (end && dObj > new Date(end)) dateMatch = false;
+            if (rawDelivDate && rawDelivDate !== '-') {
+                const dObj = new Date(rawDelivDate);
+                const dTime = dObj.getTime();
+                if (!isNaN(dTime)) {
+                    if (startTime && dTime < startTime) dateMatch = false;
+                    if (endTime && dTime > endTime) dateMatch = false;
+                } else if (startTime || endTime) {
+                    dateMatch = false; // 日期格式錯誤且有設範圍時隱藏
+                }
+            } else if (startTime || endTime) {
+                dateMatch = false; // 無日期且有設範圍時隱藏
+            }
 
             return dateMatch && name.includes(nameKwd) && orderId.includes(idKwd);
         });
