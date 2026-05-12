@@ -88,37 +88,33 @@
     let allSupplierData = [];
     let currentKey = "";
 
-    // 強大的日期解析器：處理 DD/MM/YYYY 或 YYYY/MM/DD
-    function parseDateSafe(dateStr) {
+    // 【新增/優化】智慧型日期解析器：專門處理 Sheet 中的文字型日期
+    function parseDateSmart(dateStr) {
         if (!dateStr || dateStr === '-' || dateStr.trim() === "") return null;
         
-        // 嘗試用 / 或 - 拆分
-        let parts = dateStr.split(/[\/\-]/);
+        // 嘗試標準解析 (處理 YYYY/MM/DD, YYYY-MM-DD 等)
         let d = new Date(dateStr);
+        if (!isNaN(d.getTime())) return d;
 
-        // 如果是 3 份資料 (日、月、年)
-        if (parts.length === 3) {
-            let p0 = parseInt(parts[0]);
-            let p1 = parseInt(parts[1]);
-            let p2 = parseInt(parts[2]);
-
-            // 判斷是否為 DD/MM/YYYY (第一位是日)
-            if (p0 <= 31 && p2 > 1000) {
-                d = new Date(p2, p1 - 1, p0);
-            } 
-            // 判斷是否為 YYYY/MM/DD (第一位是年)
-            else if (p0 > 1000) {
-                d = new Date(p0, p1 - 1, p2);
-            }
+        // 【核心修正】手動拆解純文字型中文日期 (XXXX年XX月XX日)
+        const chineseDateMatch = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+        if (chineseDateMatch) {
+            const year = parseInt(chineseDateMatch[1]);
+            const month = parseInt(chineseDateMatch[2]);
+            const day = parseInt(chineseDateMatch[3]);
+            // JavaScript Date 物件的月份索引是從 0 開始
+            d = new Date(year, month - 1, day);
+            if (!isNaN(d.getTime())) return d;
         }
-        
-        return isNaN(d.getTime()) ? null : d;
+
+        // 如果解析失敗，傳回 null，而不是原文字
+        return null; 
     }
 
-    function formatDateChinese(dateStr) {
-        const d = parseDateSafe(dateStr);
-        if (!d) return dateStr || '-';
-        return `${d.getFullYear()}年${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日`;
+    // 格式化顯示用：YYYY年MM月DD日 (僅用於顯示，不影響搜尋邏輯)
+    function formatDateChinese(dateObj) {
+        if (!dateObj) return '-'; // parseDateSmart 失敗時顯示槓
+        return `${dateObj.getFullYear()}年${String(dateObj.getMonth() + 1).padStart(2, '0')}月${String(dateObj.getDate()).padStart(2, '0')}日`;
     }
 
     async function loadDataFromServer() {
@@ -157,12 +153,14 @@
         setTimeout(() => { btn.disabled = false; btn.innerText = "重新載入最新資料"; }, 500);
     }
 
+    // 【核心修正】搜尋篩選邏輯，強制將文字日期與標準日期物件比對
     function applyFilters() {
-        const startVal = document.getElementById('filter-start').value;
+        const startVal = document.getElementById('filter-start').value; // YYYY-MM-DD 文字
         const endVal = document.getElementById('filter-end').value;
         const nameKwd = document.getElementById('filter-name').value.toLowerCase();
         const idKwd = document.getElementById('filter-id').value.toLowerCase();
 
+        // 轉換搜尋範圍為時間戳
         const startTime = startVal ? new Date(startVal).setHours(0,0,0,0) : null;
         const endTime = endVal ? new Date(endVal).setHours(23,59,59,999) : null;
 
@@ -172,7 +170,9 @@
             const orderId = row[3] ? row[3].replace(/"/g, '').trim().toLowerCase() : "";
 
             let dateMatch = true;
-            const dObj = parseDateSafe(rawDelivDate);
+            
+            // 使用新的智慧型解析函數
+            const dObj = parseDateSmart(rawDelivDate);
 
             if (startTime || endTime) {
                 if (dObj) {
@@ -180,7 +180,8 @@
                     if (startTime && dTime < startTime) dateMatch = false;
                     if (endTime && dTime > endTime) dateMatch = false;
                 } else {
-                    dateMatch = false; // 有設日期範圍但該筆資料沒日期，則不顯示
+                    // 有設日期範圍，但該筆資料無合法日期 (包括解析失敗)，則不顯示
+                    dateMatch = false; 
                 }
             }
 
@@ -195,14 +196,17 @@
         listArea.innerHTML = "";
         document.getElementById('status-msg').innerText = `顯示筆數：${data.length}`;
         data.forEach(row => {
+            // 【修正】在顯示時解析一次，獲取日期物件
+            const delDateObj = parseDateSmart(clean(row[5]));
+            
             const card = document.createElement('div');
             card.className = 'order-card';
             card.innerHTML = `
                 <div class="info-grid">
-                    <div class="item"><span class="label">下單日期</span><div class="val">${formatDateChinese(clean(row[1]))}</div></div>
+                    <div class="item"><span class="label">下單日期</span><div class="val">${formatDateChinese(parseDateSmart(clean(row[1])))}</div></div>
                     <div class="item"><span class="label">單號</span><div class="val">${clean(row[3])}</div></div>
                     <div class="item"><span class="label">客人姓名</span><div class="val">${clean(row[4])}</div></div>
-                    <div class="item"><span class="label">送貨日期</span><div class="val">${formatDateChinese(clean(row[5]))}</div></div>
+                    <div class="item"><span class="label">送貨日期</span><div class="val">${formatDateChinese(delDateObj)}</div></div>
                     <div class="item full"><span class="label">送貨地址</span><div class="val">${clean(row[6])}</div></div>
                     <div class="item full"><span class="label">產品及數量</span><div class="val">${clean(row[7])}</div></div>
                     <div class="item full"><span class="label">備註</span><div class="val">${clean(row[8])}</div></div>
