@@ -3,71 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>供應商查詢系統 - 出貨進度</title>
+    <title>即時出貨查詢系統</title>
     <style>
-        :root { --primary: #0066cc; --bg: #f5f7f9; --text: #333; }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; line-height: 1.6; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .header { text-align: center; margin-bottom: 30px; }
-        h2 { margin-bottom: 10px; color: #1a1a1a; }
-        
-        /* 搜尋介面 */
-        .search-area { display: flex; gap: 12px; justify-content: center; margin-bottom: 30px; }
-        input { padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px; width: 280px; font-size: 16px; }
-        button { padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        button:hover { background: #0052a3; }
-
-        /* 結果表格 */
-        .table-responsive { overflow-x: auto; display: none; margin-top: 20px; border: 1px solid #eee; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        th { background: #f8f9fa; padding: 12px; text-align: left; font-size: 14px; border-bottom: 2px solid #eee; }
-        td { padding: 15px 12px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: top; }
-        
-        .order-no { font-weight: bold; color: #1a1a1a; }
-        .product-info { color: #d32f2f; font-weight: 500; }
-        .remark { font-size: 13px; color: #666; white-space: pre-wrap; }
-        
-        .error { display: none; color: #d32f2f; text-align: center; background: #ffebee; padding: 10px; border-radius: 6px; margin-top: 15px; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .card { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .search-box { display: flex; gap: 10px; margin-bottom: 30px; justify-content: center; }
+        input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 250px; }
+        button { padding: 12px 24px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; display: none; margin-top: 20px; }
+        th, td { border-bottom: 1px solid #eee; padding: 15px; text-align: left; font-size: 14px; }
+        th { background: #f8fafc; color: #64748b; }
+        .loading { display: none; text-align: center; color: #2563eb; font-weight: bold; }
+        .error { display: none; color: #ef4444; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="card">
-        <div class="header">
-            <h2>供應商出貨查詢系統</h2>
-            <p>請輸入識別碼以查看訂單配送狀態</p>
-        </div>
+<div class="card">
+    <h2 style="text-align: center;">供應商即時查詢系統</h2>
+    <div class="search-box">
+        <input type="text" id="sid" placeholder="請輸入 supplier_id">
+        <button onclick="queryData()">即時查詢</button>
+    </div>
 
-        <div class="search-area">
-            <input type="text" id="supplierIdInput" placeholder="請輸入您的識別碼...">
-            <button onclick="searchOrders()">查詢</button>
-        </div>
+    <div id="loading" class="loading">連線至試算表中...</div>
+    <div id="error" class="error">找不到符合資料，請確認 ID 是否正確。</div>
 
-        <div id="errorMessage" class="error">找不到符合的資料，請檢查代碼是否正確。</div>
-
-        <div id="resultsWrapper" class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>單號</th>
-                        <th>客人姓名</th>
-                        <th>送貨日期</th>
-                        <th>送貨地址</th>
-                        <th>產品及數量</th>
-                        <th>備註 (Remark)</th>
-                    </tr>
-                </thead>
-                <tbody id="tableContent"></tbody>
-            </table>
-        </div>
+    <div id="resultTable" style="overflow-x: auto;">
+        <table id="shipmentTable">
+            <thead>
+                <tr>
+                    <th>單號</th>
+                    <th>客人姓名</th>
+                    <th>送貨日期</th>
+                    <th>地址</th>
+                    <th>產品/數量</th>
+                    <th>備註</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
     </div>
 </div>
 
 <script>
-    // 請在此處貼上你從 Google Sheets「發佈到網路」取得的 CSV 連結
-    const CSV_URL = "在此替換為您的連結";
+    // 貼上你的 Google Apps Script 部署網址
+    const API_URL = "在此處貼上部署網址";
 
-    async function searchOrders() {
-        const inputId = document.getElementById('supplierIdInput
+    async function queryData() {
+        const sid = document.getElementById('sid').value.trim();
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const table = document.getElementById('shipmentTable');
+        const tbody = document.getElementById('tableBody');
+
+        if (!sid) return;
+
+        loading.style.display = 'block';
+        error.style.display = 'none';
+        table.style.display = 'none';
+
+        try {
+            // 直接呼叫 Google Apps Script Web App
+            const response = await fetch(`${API_URL}?sid=${encodeURIComponent(sid)}`);
+            const data = await response.json();
+
+            if (data.length > 0) {
+                loading.style.display = 'none';
+                table.style.display = 'table';
+                tbody.innerHTML = data.map(item => `
+                    <tr>
+                        <td><strong>${item.order_no}</strong></td>
+                        <td>${item.customer}</td>
+                        <td>${item.date}</td>
+                        <td>${item.address}</td>
+                        <td style="color:#1e40af">${item.product}</td>
+                        <td style="color:#64748b; font-size:12px">${item.remark}</td>
+                    </tr>
+                `).join('');
+            } else {
+                throw new Error();
+            }
+        } catch (e) {
+            loading.style.display = 'none';
+            error.style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>
