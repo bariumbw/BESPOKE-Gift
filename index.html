@@ -30,11 +30,11 @@
         button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
         button:hover { opacity: 0.8; }
         .btn-reload { background: var(--success); color: white; }
-        .btn-sort { background: #fff; color: var(--primary); border: 1px solid var(--accent); padding: 6px 12px; font-size: 13px; }
+        .btn-sort { background: #fff; color: var(--primary); border: 1px solid var(--accent); padding: 6px 12px; font-size: 13px; margin-left: 5px; }
         .btn-logout { background: #bdc3c7; }
 
-        /* 新增：排序按鈕與筆數同一行且置右 */
-        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 5px; }
+        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 5px; flex-wrap: wrap; gap: 10px; }
+        .sort-actions { display: flex; gap: 5px; }
 
         .order-card { background: #fff; border: 1px solid #f2e1e4; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--accent); }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -42,7 +42,7 @@
         .label { font-size: 12px; color: #a1a1a1; font-weight: bold; margin-bottom: 2px; display: block; }
         .val { font-size: 15px; color: var(--text); white-space: pre-wrap; word-break: break-all; margin-bottom: 10px; }
         
-        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } .status-bar { flex-direction: column; align-items: flex-start; } .sort-actions { width: 100%; justify-content: space-between; } .btn-sort { margin-left: 0; flex: 1; text-align: center; } }
 
         h2, h4 { margin-top: 0; color: var(--primary); }
         .count-tag { font-size: 14px; color: #999; }
@@ -83,7 +83,10 @@
 
     <div id="result-header" class="status-bar" style="display:none;">
         <div id="status-msg" class="count-tag"></div>
-        <button class="btn-sort" onclick="sortDataByDate()">送貨日期排序：近至遠</button>
+        <div class="sort-actions">
+            <button class="btn-sort" onclick="sortDataByOrderID()">單號：小至大</button>
+            <button class="btn-sort" onclick="sortDataByDate()">送貨日期：近至遠</button>
+        </div>
     </div>
     
     <div id="result-list"></div>
@@ -149,10 +152,8 @@
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
             document.getElementById('result-header').style.display = "flex";
-            
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('filter-start').value = today;
-            
             applyFilters();
         } else {
             document.getElementById('login-msg').style.display = "block";
@@ -168,6 +169,16 @@
         await loadDataFromServer();
         applyFilters();
         setTimeout(() => { btn.disabled = false; btn.innerText = "更新資料"; }, 500);
+    }
+
+    // 新增：按單號排序 (小至大)
+    function sortDataByOrderID() {
+        filteredData.sort((a, b) => {
+            const idA = (a[3] || "").toString();
+            const idB = (b[3] || "").toString();
+            return idA.localeCompare(idB, undefined, {numeric: true, sensitivity: 'base'});
+        });
+        renderList(filteredData);
     }
 
     function sortDataByDate() {
