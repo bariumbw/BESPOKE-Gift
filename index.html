@@ -16,7 +16,6 @@
         
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: var(--text); }
         .container { max-width: 900px; margin: 20px auto; background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-        
         .header-logo { width: 90px; margin-bottom: 15px; display: block; }
         
         #login-section { text-align: center; padding: 30px 0; }
@@ -34,8 +33,6 @@
         .btn-logout { background: #bdc3c7; }
 
         .order-card { background: #fff; border: 1px solid #f2e1e4; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--accent); }
-        
-        /* 左右分欄佈局 */
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
         .label { font-size: 12px; color: #a1a1a1; font-weight: bold; margin-bottom: 2px; display: block; }
@@ -56,10 +53,10 @@
     <img src="https://www.bespoke-mall.com/pub/media/webp_image/logo/stores/1/BespokeMallv4.webp" alt="LOGO" class="header-logo">
 
     <div id="login-section">
-        <h2>供應商系統</h2>
+        <h2>BESPOKE MALL 回禮 - 供應商管理系統</h2>
         <div class="login-box">
             <input type="text" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:10px; border-color: #f2e1e4;">
-            <button id="loginBtn" onclick="doLogin()" style="width:100%;">登入查看</button>
+            <button id="loginBtn" onclick="doLogin()" style="width:100%;">驗證並讀取資料</button>
             <p id="login-msg" style="color:#e8aeb7; font-size:14px; display:none; margin-top:10px; font-weight: bold;">找不到此識別碼，請確認資料格式</p>
         </div>
     </div>
@@ -138,14 +135,20 @@
         const btn = document.getElementById('loginBtn');
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span> 載入中...';
+        
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
+            
+            // 【核心修正】登入後預設日期為今天
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('filter-start').value = today;
+            
             applyFilters();
         } else {
             document.getElementById('login-msg').style.display = "block";
             btn.disabled = false;
-            btn.innerText = "登入查看";
+            btn.innerText = "驗證並讀取資料";
         }
     }
 
@@ -163,18 +166,22 @@
         const end = document.getElementById('filter-end').value;
         const nameK = document.getElementById('filter-name').value.toLowerCase();
         const idK = document.getElementById('filter-id').value.toLowerCase();
+        
+        // 將時間設定為該日期的 00:00:00，確保包含當天
         const sTime = start ? new Date(start).setHours(0,0,0,0) : null;
         const eTime = end ? new Date(end).setHours(23,59,59,999) : null;
 
         const filtered = allSupplierData.filter(r => {
-            const d = parseDateSmart(r[5]);
+            const d = parseDateSmart(r[5]); // 送貨日期在第 5 欄
             let dM = true;
             if (sTime || eTime) {
                 if (d) {
                     const t = d.getTime();
                     if (sTime && t < sTime) dM = false;
                     if (eTime && t > eTime) dM = false;
-                } else { dM = false; }
+                } else { 
+                    dM = false; // 如果沒有日期或日期格式錯誤，在日期篩選模式下不顯示
+                }
             }
             return dM && (r[4]||"").toLowerCase().includes(nameK) && (r[3]||"").toLowerCase().includes(idK);
         });
