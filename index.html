@@ -25,24 +25,25 @@
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
         
         .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
-        input, button { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; }
+        input, button, select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; }
         
         button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
         button:hover { opacity: 0.8; }
         .btn-reload { background: var(--success); color: white; }
-        .btn-sort { background: #fff; color: var(--primary); border: 1px solid var(--accent); padding: 6px 12px; font-size: 13px; margin-left: 5px; }
         .btn-logout { background: #bdc3c7; }
 
-        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 5px; flex-wrap: wrap; gap: 10px; }
-        .sort-actions { display: flex; gap: 5px; }
+        /* 下拉選單樣式 */
+        select { background-color: white; color: var(--text); cursor: pointer; border-color: var(--accent); }
 
+        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 5px; flex-wrap: wrap; gap: 10px; }
+        
         .order-card { background: #fff; border: 1px solid #f2e1e4; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--accent); }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
         .label { font-size: 12px; color: #a1a1a1; font-weight: bold; margin-bottom: 2px; display: block; }
         .val { font-size: 15px; color: var(--text); white-space: pre-wrap; word-break: break-all; margin-bottom: 10px; }
         
-        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } .status-bar { flex-direction: column; align-items: flex-start; } .sort-actions { width: 100%; justify-content: space-between; } .btn-sort { margin-left: 0; flex: 1; text-align: center; } }
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } .status-bar { flex-direction: column; align-items: flex-start; } select { width: 100%; } }
 
         h2, h4 { margin-top: 0; color: var(--primary); }
         .count-tag { font-size: 14px; color: #999; }
@@ -84,8 +85,12 @@
     <div id="result-header" class="status-bar" style="display:none;">
         <div id="status-msg" class="count-tag"></div>
         <div class="sort-actions">
-            <button class="btn-sort" onclick="sortDataByOrderID()">單號：小至大</button>
-            <button class="btn-sort" onclick="sortDataByDate()">送貨日期：近至遠</button>
+            <select id="sortSelector" onchange="handleSort()">
+                <option value="date_desc">日期排序：近至遠</option>
+                <option value="date_asc">日期排序：遠至近</option>
+                <option value="id_asc">單號排序：小至大</option>
+                <option value="id_desc">單號排序：大至小</option>
+            </select>
         </div>
     </div>
     
@@ -171,24 +176,23 @@
         setTimeout(() => { btn.disabled = false; btn.innerText = "更新資料"; }, 500);
     }
 
-    // 新增：按單號排序 (小至大)
-    function sortDataByOrderID() {
-        filteredData.sort((a, b) => {
-            const idA = (a[3] || "").toString();
-            const idB = (b[3] || "").toString();
-            return idA.localeCompare(idB, undefined, {numeric: true, sensitivity: 'base'});
-        });
-        renderList(filteredData);
-    }
-
-    function sortDataByDate() {
-        filteredData.sort((a, b) => {
-            const dA = parseDateSmart(a[5]);
-            const dB = parseDateSmart(b[5]);
-            const tA = dA ? dA.getTime() : 0;
-            const tB = dB ? dB.getTime() : 0;
-            return tB - tA;
-        });
+    // 處理下拉選單排序觸發
+    function handleSort() {
+        const type = document.getElementById('sortSelector').value;
+        switch(type) {
+            case 'id_asc':
+                filteredData.sort((a, b) => (a[3]||"").toString().localeCompare((b[3]||"").toString(), undefined, {numeric: true}));
+                break;
+            case 'id_desc':
+                filteredData.sort((a, b) => (b[3]||"").toString().localeCompare((a[3]||"").toString(), undefined, {numeric: true}));
+                break;
+            case 'date_desc':
+                filteredData.sort((a, b) => (parseDateSmart(b[5])?.getTime() || 0) - (parseDateSmart(a[5])?.getTime() || 0));
+                break;
+            case 'date_asc':
+                filteredData.sort((a, b) => (parseDateSmart(a[5])?.getTime() || 0) - (parseDateSmart(b[5])?.getTime() || 0));
+                break;
+        }
         renderList(filteredData);
     }
 
@@ -212,7 +216,9 @@
             }
             return dM && (r[4]||"").toLowerCase().includes(nameK) && (r[3]||"").toLowerCase().includes(idK);
         });
-        renderList(filteredData);
+        
+        // 套用目前選擇的排序方式
+        handleSort();
     }
 
     function renderList(data) {
