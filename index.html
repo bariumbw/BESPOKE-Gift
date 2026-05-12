@@ -32,13 +32,11 @@
         .btn-reload { background: var(--success); color: white; }
         .btn-logout { background: #bdc3c7; }
 
-        /* 排序工具欄樣式 */
         .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 5px; flex-wrap: wrap; gap: 10px; }
         .sort-controls { display: flex; align-items: center; gap: 8px; }
         
         select { background-color: white; border-color: var(--accent); }
         
-        /* 點選式升降序按鈕 */
         .order-toggle { background: #fff; color: var(--primary); border: 1px solid var(--accent); display: flex; padding: 0; overflow: hidden; }
         .order-toggle span { padding: 8px 12px; transition: 0.3s; cursor: pointer; font-size: 13px; }
         .order-toggle span.active { background: var(--success); color: white; }
@@ -91,8 +89,8 @@
         
         <div class="sort-controls">
             <select id="sortField" onchange="handleSort()">
+                <option value="id" selected>單號</option>
                 <option value="date">送貨日期</option>
-                <option value="id">單號</option>
             </select>
             
             <div class="order-toggle">
@@ -110,7 +108,7 @@
     let allSupplierData = [];
     let currentKey = "";
     let filteredData = [];
-    let currentSortOrder = 'desc'; // 預設降序
+    let currentSortOrder = 'desc'; // 預設修正為降序
 
     function parseCSVStrict(str) {
         const arr = [];
@@ -185,7 +183,6 @@
         setTimeout(() => { btn.disabled = false; btn.innerText = "更新資料"; }, 500);
     }
 
-    // 設定升降序並重新排序
     function setSortOrder(order) {
         currentSortOrder = order;
         document.getElementById('order-asc').classList.toggle('active', order === 'asc');
