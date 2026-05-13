@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>供應商系統 - 雙欄行動版</title>
+    <title>供應商系統 - 手機優化版</title>
     <style>
         :root { 
             --primary: #7f8c8d;
@@ -22,38 +22,46 @@
             color: var(--text); 
         }
         
-        .container { max-width: 1000px; margin: 0 auto; background: var(--white); padding: 12px; border-radius: 12px; }
+        .container { max-width: 100%; margin: 0 auto; background: var(--white); padding: 10px; border-radius: 12px; box-sizing: border-box; }
         .header-logo { width: 60px; margin: 0 auto 10px auto; display: block; }
         
-        input, button, select { 
-            padding: 10px; 
+        #control-panel { display: none; background: #fef9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #f2e1e4; box-sizing: border-box; }
+        
+        /* 功能按鈕移至最上方 */
+        .btn-group { display: flex; gap: 8px; margin-bottom: 12px; }
+        button { padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        button:active { opacity: 0.7; }
+        .btn-reload { background: var(--success); color: white; flex: 1; }
+        .btn-logout { background: #bdc3c7; color: white; flex: 1; }
+
+        /* 篩選條件排列在按鈕下方 */
+        .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box; }
+        
+        input, select { 
+            padding: 8px; 
             border-radius: 6px; 
             border: 1px solid #ddd; 
-            font-size: 14px; 
+            font-size: 13px; 
             width: 100%;
             box-sizing: border-box;
+            background-color: #fff;
         }
         
-        button { background: var(--primary); color: white; font-weight: bold; border: none; }
-        .btn-reload { background: var(--success); flex: 1; }
-        .btn-logout { background: #bdc3c7; flex: 1; }
+        .label { font-size: 10px; color: #999; font-weight: bold; margin-bottom: 2px; display: block; }
 
-        #control-panel { display: none; background: #fef9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #f2e1e4; }
-        .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .btn-group { display: flex; gap: 8px; margin-top: 10px; }
-
-        .status-bar { display: none; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-        .sort-controls { display: flex; gap: 5px; width: 100%; }
-        
-        .order-toggle { display: flex; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; background: white; min-width: 80px; }
-        .order-toggle span { flex: 1; padding: 8px 5px; text-align: center; font-size: 12px; cursor: pointer; }
+        /* 排序與筆數 */
+        .status-bar { display: none; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+        .sort-controls { display: flex; gap: 5px; flex: 1; }
+        .order-toggle { display: flex; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; background: white; min-width: 70px; }
+        .order-toggle span { flex: 1; padding: 6px; text-align: center; font-size: 12px; cursor: pointer; }
         .order-toggle span.active { background: var(--success); color: white; }
 
-        /* 核心修改：卡片網格佈局 */
+        /* 雙欄網格 */
         #result-list { 
             display: grid; 
-            grid-template-columns: repeat(2, 1fr); /* 強制雙欄 */
+            grid-template-columns: repeat(2, 1fr); 
             gap: 8px; 
+            width: 100%;
         }
 
         .order-card { 
@@ -61,30 +69,26 @@
             border: 1px solid #f2e1e4; 
             border-radius: 8px; 
             padding: 10px; 
-            border-top: 3px solid var(--accent); /* 改為頂部線條節省空間 */
+            border-top: 4px solid var(--accent);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            box-sizing: border-box;
         }
         
-        .info-item { margin-bottom: 6px; }
-        .label { font-size: 10px; color: #bbb; font-weight: bold; margin-bottom: 1px; }
-        .val { font-size: 13px; color: var(--text); line-height: 1.3; overflow-wrap: break-word; }
+        .card-item { margin-bottom: 8px; border-bottom: 1px solid #fdf2f4; padding-bottom: 4px; }
+        .card-item:last-child { border-bottom: none; }
         
-        .order-id-tag { color: var(--primary); font-weight: bold; font-size: 13px; }
-        .delivery-date-tag { color: #d63384; font-weight: bold; font-size: 12px; }
+        .val { font-size: 12px; color: var(--text); line-height: 1.4; word-break: break-all; }
+        .id-text { color: var(--primary); font-weight: bold; }
+        .date-text { color: #d63384; font-weight: bold; }
+        .prod-text { color: #333; font-weight: 500; }
+        .note-text { font-size: 11px; color: #888; font-style: italic; }
 
-        /* 平板以上寬度轉為三欄 */
         @media (min-width: 768px) {
             #result-list { grid-template-columns: repeat(3, 1fr); }
-            .status-bar { flex-direction: row; justify-content: space-between; align-items: center; }
-            .sort-controls { width: auto; }
         }
 
-        h2, h4 { margin: 5px 0; color: var(--primary); text-align: center; font-size: 16px; }
-        .count-tag { font-size: 12px; color: #999; text-align: center; }
-        .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .count-tag { font-size: 12px; color: #999; }
     </style>
 </head>
 <body>
@@ -92,23 +96,30 @@
 <div class="container">
     <img src="https://www.bespoke-mall.com/pub/media/webp_image/logo/stores/1/BespokeMallv4.webp" alt="LOGO" class="header-logo">
 
-    <div id="login-section">
-        <h2>供應商系統</h2>
-        <input type="text" id="supplierKey" placeholder="輸入識別碼" style="margin-bottom:10px;">
-        <button id="loginBtn" onclick="doLogin()">登入</button>
-        <p id="login-msg" style="color:#e8aeb7; font-size:12px; display:none; margin-top:10px;">識別碼錯誤</p>
+    <div id="login-section" style="text-align: center; padding: 20px 0;">
+        <h4 style="margin-bottom:15px; color: var(--primary);">供應商系統登入</h4>
+        <input type="text" id="supplierKey" placeholder="輸入識別碼" style="margin-bottom:10px; padding: 12px;">
+        <button onclick="doLogin()" style="width:100%; padding: 12px; background: var(--primary); color: white;">進入系統</button>
+        <p id="login-msg" style="color:#e8aeb7; font-size:12px; display:none; margin-top:10px; font-weight: bold;">識別碼無效</p>
     </div>
 
     <div id="control-panel">
-        <div class="filter-grid">
-            <div><span class="label">日期 (起)</span><input type="date" id="filter-start" onchange="applyFilters()"></div>
-            <div><span class="label">日期 (迄)</span><input type="date" id="filter-end" onchange="applyFilters()"></div>
-            <div><input type="text" id="filter-name" placeholder="姓名..." oninput="applyFilters()"></div>
-            <div><input type="text" id="filter-id" placeholder="單號..." oninput="applyFilters()"></div>
-        </div>
         <div class="btn-group">
-            <button class="btn-reload" id="reloadBtn" onclick="reloadData()">更新</button>
-            <button class="btn-logout" onclick="location.reload()">登出</button>
+            <button class="btn-reload" onclick="reloadData()">更新資料</button>
+            <button class="btn-logout" onclick="location.reload()">登出系統</button>
+        </div>
+        
+        <div class="filter-grid">
+            <div>
+                <span class="label">送貨日期 (起)</span>
+                <input type="date" id="filter-start" onchange="applyFilters()">
+            </div>
+            <div>
+                <span class="label">送貨日期 (迄)</span>
+                <input type="date" id="filter-end" onchange="applyFilters()">
+            </div>
+            <div><input type="text" id="filter-name" placeholder="搜尋姓名" oninput="applyFilters()"></div>
+            <div><input type="text" id="filter-id" placeholder="搜尋單號" oninput="applyFilters()"></div>
         </div>
     </div>
 
@@ -116,10 +127,10 @@
         <div id="status-msg" class="count-tag"></div>
         <div class="sort-controls">
             <select id="sortField" onchange="handleSort()" style="flex:2;">
-                <option value="id" selected>單號</option>
-                <option value="date">日期</option>
+                <option value="id" selected>按單號</option>
+                <option value="date">按日期</option>
             </select>
-            <div class="order-toggle" style="flex:1;">
+            <div class="order-toggle" style="flex:1.2;">
                 <span id="order-asc" onclick="setSortOrder('asc')">升</span>
                 <span id="order-desc" class="active" onclick="setSortOrder('desc')">降</span>
             </div>
@@ -160,7 +171,7 @@
 
     function formatDate(dateStr) {
         const d = parseDateSmart(dateStr);
-        return d ? `${d.getMonth()+1}/${d.getDate()}` : (dateStr || '-');
+        return d ? `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}` : (dateStr || '-');
     }
 
     async function loadDataFromServer() {
@@ -188,11 +199,11 @@
     }
 
     async function reloadData() {
-        const btn = document.getElementById('reloadBtn');
-        btn.innerHTML = '<span class="loading-spin"></span>';
+        const btn = document.querySelector('.btn-reload');
+        btn.innerText = "讀取中...";
         await loadDataFromServer();
         applyFilters();
-        btn.innerText = "更新";
+        btn.innerText = "更新資料";
     }
 
     function setSortOrder(order) {
@@ -241,21 +252,22 @@
             const card = document.createElement('div');
             card.className = 'order-card';
             card.innerHTML = `
-                <div class="info-item">
+                <div class="card-item">
                     <span class="label">單號 / 姓名</span>
-                    <div class="val"><span class="order-id-tag">${r[3]}</span><br>${r[4] || '-'}</div>
+                    <div class="val"><span class="id-text">${r[3]}</span><br>${r[4] || '-'}</div>
                 </div>
-                <div class="info-item">
+                <div class="card-item">
                     <span class="label">送貨日期</span>
-                    <div class="val delivery-date-tag">${formatDate(r[5])}</div>
+                    <div class="val date-text">${formatDate(r[5])}</div>
                 </div>
-                <div class="info-item">
+                <div class="card-item">
                     <span class="label">產品數量</span>
-                    <div class="val" style="font-weight:500;">${r[7] || '-'}</div>
+                    <div class="val prod-text">${r[7] || '-'}</div>
                 </div>
-                <div class="info-item">
-                    <span class="label">備註</span>
-                    <div class="val" style="font-size:11px; color:#888;">${r[8] || '-'}</div>
+                <div class="card-item">
+                    <span class="label">地址及備註</span>
+                    <div class="val" style="font-size:10px; color:#666;">${r[6] || '-'}</div>
+                    <div class="val note-text">${r[8] || '-'}</div>
                 </div>
             `;
             area.appendChild(card);
