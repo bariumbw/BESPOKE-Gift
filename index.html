@@ -64,15 +64,15 @@
             #control-panel h4 { width: 100%; text-align: left; margin-bottom: 10px; }
             #control-panel > div:first-child { flex-direction: column; align-items: flex-start !important; }
             
-            /* 日期縮小且不超出 */
+            /* 日期縮小且不超出背後格子 */
             .filter-grid { grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
             .filter-grid input { 
-                font-size: 11px; /* 縮小字體 */
-                padding: 6px 4px; /* 縮小內邊距 */
+                font-size: 11px; 
+                padding: 6px 4px; 
                 width: 100%; 
                 margin: 0; 
             }
-            .filter-grid .label { font-size: 10px; } /* 縮小標籤 */
+            .filter-grid .label { font-size: 10px; }
             
             .status-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
             .sort-controls { width: 100%; justify-content: space-between; }
@@ -100,7 +100,7 @@
 
     <div id="control-panel">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
-            <h4>訂單篩選</h4>
+            <h4>訂單篩選 <span id="staff-badge" style="display:none; font-size:10px; background:var(--primary); color:white; padding:2px 6px; border-radius:10px; margin-left:5px;">管理員模式</span></h4>
             <div class="btn-group">
                 <button class="btn-reload" id="reloadBtn" onclick="reloadData()">更新資料</button>
                 <button class="btn-logout" onclick="location.reload()">登出</button>
@@ -133,8 +133,10 @@
 
 <script>
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
+    const STAFF_KEY = "BESPOKE01"; // 員工識別碼
     let allSupplierData = [];
     let currentKey = "";
+    let isStaff = false;
     let filteredData = [];
     let currentSortOrder = 'desc';
 
@@ -174,7 +176,16 @@
         try {
             const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
             const text = await resp.text();
-            allSupplierData = parseCSVStrict(text).filter(r => r[2] && r[2].trim().toLowerCase() === currentKey.trim().toLowerCase());
+            const rows = parseCSVStrict(text);
+            
+            if (isStaff) {
+                // 員工模式：過濾掉標題列（第0列）後顯示全部
+                allSupplierData = rows.slice(1).filter(r => r[3]); // 至少要有單號
+            } else {
+                // 供應商模式：匹配識別碼
+                const sk = currentKey.trim().toLowerCase();
+                allSupplierData = rows.filter(r => r[2] && r[2].trim().toLowerCase() === sk);
+            }
             return allSupplierData.length > 0;
         } catch (e) { return false; }
     }
@@ -182,14 +193,20 @@
     async function doLogin() {
         currentKey = document.getElementById('supplierKey').value.trim();
         if (!currentKey) return;
+        
         const btn = document.getElementById('loginBtn');
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span>';
+        
+        // 檢查是否為管理員
+        isStaff = (currentKey.toUpperCase() === STAFF_KEY);
         
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
             document.getElementById('result-header').style.display = "flex";
+            if(isStaff) document.getElementById('staff-badge').style.display = "inline-block";
+            
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('filter-start').value = today;
             applyFilters();
@@ -220,8 +237,10 @@
         const field = document.getElementById('sortField').value;
         const isAsc = currentSortOrder === 'asc';
         filteredData.sort((a, b) => {
-            if (field === 'id') return isAsc ? a[3].localeCompare(b[3], undefined, {numeric: true}) : b[3].localeCompare(a[3], undefined, {numeric: true});
-            return isAsc ? (parseDateSmart(a[5]) - parseDateSmart(b[5])) : (parseDateSmart(b[5]) - parseDateSmart(a[5]));
+            if (field === 'id') return isAsc ? (a[3]||"").localeCompare(b[3]||"", undefined, {numeric: true}) : (b[3]||"").localeCompare(a[3]||"", undefined, {numeric: true});
+            const dA = parseDateSmart(a[5])?.getTime() || 0;
+            const dB = parseDateSmart(b[5])?.getTime() || 0;
+            return isAsc ? (dA - dB) : (dB - dA);
         });
         renderList(filteredData);
     }
@@ -263,6 +282,7 @@
                         <span class="label">單號</span><div class="val" style="color:var(--primary); font-weight:bold;">${r[3] || '-'}</div>
                         <span class="label">送貨日期</span><div class="val" style="color:#d63384; font-weight:bold;">${formatDate(r[5])}</div>
                         <span class="label">送貨地址</span><div class="val">${r[6] || '-'}</div>
+                        ${isStaff ? `<span class="label">供應商識別碼</span><div class="val" style="color:#7f8c8d; font-size:12px;">${r[2] || '-'}</div>` : ''}
                     </div>
                 </div>
             `;
