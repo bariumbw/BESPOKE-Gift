@@ -64,15 +64,21 @@
             #control-panel h4 { width: 100%; text-align: left; margin-bottom: 10px; }
             #control-panel > div:first-child { flex-direction: column; align-items: flex-start !important; }
             
-            /* 日期縮小且不超出背後格子 */
-            .filter-grid { grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
+            /* 日期選擇器精細調整 */
+            .filter-grid { 
+                grid-template-columns: 1fr 1fr; 
+                gap: 12px; /* 增加橫向間距，讓兩個日期方塊不貼近 */
+                width: 100%; 
+            }
             .filter-grid input { 
                 font-size: 11px; 
-                padding: 6px 4px; 
+                padding: 4px 2px; /* 極小內邊距，縮小外框感 */
+                border: 1px solid #eee; /* 更細的邊框顏色 */
                 width: 100%; 
                 margin: 0; 
+                height: 32px; /* 固定高度保持整齊 */
             }
-            .filter-grid .label { font-size: 10px; }
+            .filter-grid .label { font-size: 10px; margin-bottom: 2px; }
             
             .status-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
             .sort-controls { width: 100%; justify-content: space-between; }
@@ -133,7 +139,7 @@
 
 <script>
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
-    const STAFF_KEY = "BESPOKE01"; // 員工識別碼
+    const STAFF_KEY = "BESPOKE01"; 
     let allSupplierData = [];
     let currentKey = "";
     let isStaff = false;
@@ -179,10 +185,8 @@
             const rows = parseCSVStrict(text);
             
             if (isStaff) {
-                // 員工模式：過濾掉標題列（第0列）後顯示全部
-                allSupplierData = rows.slice(1).filter(r => r[3]); // 至少要有單號
+                allSupplierData = rows.slice(1).filter(r => r[3]); 
             } else {
-                // 供應商模式：匹配識別碼
                 const sk = currentKey.trim().toLowerCase();
                 allSupplierData = rows.filter(r => r[2] && r[2].trim().toLowerCase() === sk);
             }
@@ -198,7 +202,6 @@
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span>';
         
-        // 檢查是否為管理員
         isStaff = (currentKey.toUpperCase() === STAFF_KEY);
         
         if (await loadDataFromServer()) {
