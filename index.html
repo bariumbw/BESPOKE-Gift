@@ -33,16 +33,16 @@
         .btn-reload { background: var(--success); color: white; }
         .btn-logout { background: #bdc3c7; }
 
+        /* 狀態切換按鈕樣式 */
+        .status-toggle-group { display: flex; gap: 0; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; margin-bottom: 15px; width: fit-content; }
+        .status-toggle-group button { 
+            background: white; color: var(--primary); padding: 8px 16px; border-radius: 0; font-size: 13px; border-right: 1px solid var(--accent);
+        }
+        .status-toggle-group button:last-child { border-right: none; }
+        .status-toggle-group button.active { background: var(--success); color: white; }
+
         .btn-ship { 
-            background: #e8aeb7; 
-            color: white; 
-            padding: 8px 12px; 
-            font-size: 13px; 
-            border-radius: 6px; 
-            margin-top: 10px;
-            width: 100%;
-            border: none;
-            transition: 0.3s;
+            background: #e8aeb7; color: white; padding: 8px 12px; font-size: 13px; border-radius: 6px; margin-top: 10px; width: 100%; border: none; transition: 0.3s;
         }
         .btn-ship.shipped { background: #bdc3c7; cursor: not-allowed; opacity: 0.7; }
 
@@ -67,11 +67,8 @@
 
         @media (max-width: 600px) {
             body { padding: 8px; }
-            .container { padding: 12px; margin: 5px auto; overflow: hidden; }
-            #control-panel h4 { width: 100%; text-align: left; margin-bottom: 10px; }
-            .filter-grid { grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
-            .filter-grid input { font-size: 11px; padding: 4px 2px; border: 1px solid #eee; width: 100%; height: 32px; }
-            .order-card { padding: 15px; }
+            .container { padding: 12px; margin: 5px auto; }
+            .filter-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
             .info-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
         }
     </style>
@@ -88,7 +85,6 @@
             <input type="email" id="supplierEmail" placeholder="請輸入登記之電子郵件" style="width:100%; margin-bottom:15px; border-color: #f2e1e4;">
             
             <label for="supplierKey">識別碼 :</label>
-            <!-- 已改為 password 類型，隱藏輸入內容 -->
             <input type="password" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:20px; border-color: #f2e1e4;">
             
             <button id="loginBtn" onclick="doLogin()" style="width:100%;">登入</button>
@@ -97,13 +93,21 @@
     </div>
 
     <div id="control-panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
-            <h4>訂單篩選 <span id="staff-badge" style="display:none; font-size:10px; background:var(--primary); color:white; padding:2px 6px; border-radius:10px; margin-left:5px;">管理員模式</span></h4>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+            <h4>訂單管理 <span id="staff-badge" style="display:none; font-size:10px; background:var(--primary); color:white; padding:2px 6px; border-radius:10px; margin-left:5px;">管理員模式</span></h4>
             <div class="btn-group">
                 <button class="btn-reload" id="reloadBtn" onclick="reloadData()">更新資料</button>
                 <button class="btn-logout" onclick="location.reload()">登出</button>
             </div>
         </div>
+
+        <!-- 狀態篩選按鈕 -->
+        <div class="status-toggle-group">
+            <button id="tab-unshipped" class="active" onclick="setStatusFilter('unshipped')">未出貨</button>
+            <button id="tab-shipped" onclick="setStatusFilter('shipped')">已出貨</button>
+            <button id="tab-all" onclick="setStatusFilter('all')">全部</button>
+        </div>
+
         <div class="filter-grid">
             <div><span class="label">日期 (起)</span><input type="date" id="filter-start" onchange="applyFilters()"></div>
             <div><span class="label">日期 (迄)</span><input type="date" id="filter-end" onchange="applyFilters()"></div>
@@ -141,6 +145,7 @@
     let isStaff = false;
     let filteredData = [];
     let currentSortOrder = 'desc';
+    let currentStatusTab = 'unshipped'; // 預設為未出貨
 
     function parseCSVStrict(str) {
         const arr = [];
@@ -210,14 +215,24 @@
             document.getElementById('control-panel').style.display = "block";
             document.getElementById('result-header').style.display = "flex";
             if(isStaff) document.getElementById('staff-badge').style.display = "inline-block";
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('filter-start').value = today;
+            
+            // 取消日期預設，保持欄位空白
+            document.getElementById('filter-start').value = "";
+            
             applyFilters();
         } else {
             document.getElementById('login-msg').style.display = "block";
             btn.disabled = false;
             btn.innerText = "登入";
         }
+    }
+
+    // 狀態按鈕點擊處理
+    function setStatusFilter(status) {
+        currentStatusTab = status;
+        document.querySelectorAll('.status-toggle-group button').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`tab-${status}`).classList.add('active');
+        applyFilters();
     }
 
     async function reloadData() {
@@ -238,6 +253,12 @@
         const eT = e ? new Date(e).setHours(23,59,59,999) : null;
 
         filteredData = allSupplierData.filter(r => {
+            // 1. 狀態篩選
+            const shipStatus = (r[9] || "").trim();
+            if (currentStatusTab === 'unshipped' && shipStatus === '已出貨') return false;
+            if (currentStatusTab === 'shipped' && shipStatus !== '已出貨') return false;
+
+            // 2. 日期與關鍵字篩選
             const d = parseDateSmart(r[5]);
             let dM = true;
             if (sT || eT) {
