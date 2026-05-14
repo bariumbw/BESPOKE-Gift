@@ -22,7 +22,7 @@
         .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
         .login-box label { font-size: 13px; color: #888; margin-bottom: 5px; display: block; font-weight: bold; }
         
-        #control-panel { display: none; background: #fef9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #f2e1e4; box-sizing: border-box; }
+        #control-panel { display: none; background: #fef9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f2e1e4; box-sizing: border-box; }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
         
         .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -33,25 +33,26 @@
         .btn-reload { background: var(--success); color: white; }
         .btn-logout { background: #bdc3c7; }
 
-        /* 狀態切換按鈕樣式 */
-        .status-toggle-group { display: flex; gap: 0; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; margin-bottom: 15px; width: fit-content; }
+        /* 狀態切換按鈕樣式 - 置於列表上方 */
+        .status-toggle-wrapper { margin-bottom: 15px; display: flex; justify-content: center; }
+        .status-toggle-group { display: flex; gap: 0; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; width: 100%; max-width: 400px; }
         .status-toggle-group button { 
-            background: white; color: var(--primary); padding: 8px 16px; border-radius: 0; font-size: 13px; border-right: 1px solid var(--accent);
+            flex: 1; background: white; color: var(--primary); padding: 10px; border-radius: 0; font-size: 14px; border-right: 1px solid var(--accent);
         }
         .status-toggle-group button:last-child { border-right: none; }
         .status-toggle-group button.active { background: var(--success); color: white; }
 
         .btn-ship { 
-            background: #e8aeb7; color: white; padding: 8px 12px; font-size: 13px; border-radius: 6px; margin-top: 10px; width: 100%; border: none; transition: 0.3s;
+            background: #e8aeb7; color: white; padding: 10px 12px; font-size: 13px; border-radius: 6px; margin-top: 10px; width: 100%; border: none; transition: 0.3s;
         }
         .btn-ship.shipped { background: #bdc3c7; cursor: not-allowed; opacity: 0.7; }
 
-        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 5px; flex-wrap: wrap; gap: 10px; }
+        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--accent); }
         .sort-controls { display: flex; align-items: center; gap: 8px; }
         
         select { background-color: white; border-color: var(--accent); }
         
-        .order-toggle { background: #fff; color: var(--primary); border: 1px solid var(--accent); display: flex; padding: 0; overflow: hidden; }
+        .order-toggle { background: #fff; color: var(--primary); border: 1px solid var(--accent); display: flex; padding: 0; overflow: hidden; border-radius: 6px; }
         .order-toggle span { padding: 8px 12px; transition: 0.3s; cursor: pointer; font-size: 13px; }
         .order-toggle span.active { background: var(--success); color: white; }
 
@@ -61,15 +62,17 @@
         .val { font-size: 14px; color: var(--text); white-space: pre-wrap; word-break: break-all; margin-bottom: 12px; line-height: 1.5; }
         
         h2, h4 { margin-top: 0; color: var(--primary); }
-        .count-tag { font-size: 14px; color: #999; }
+        .count-tag { font-size: 14px; color: #999; font-weight: bold; }
         .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 5px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 600px) {
             body { padding: 8px; }
-            .container { padding: 12px; margin: 5px auto; }
-            .filter-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .container { padding: 15px 12px; margin: 5px auto; }
+            .filter-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
             .info-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .status-bar { flex-direction: column; align-items: flex-start; }
+            .sort-controls { width: 100%; justify-content: space-between; }
         }
     </style>
 </head>
@@ -78,6 +81,7 @@
 <div class="container">
     <img src="https://www.bespoke-mall.com/pub/media/webp_image/logo/stores/1/BespokeMallv4.webp" alt="LOGO" class="header-logo">
 
+    <!-- 登入區塊 -->
     <div id="login-section">
         <h2 style="text-align:center;">供應商管理系統</h2>
         <div class="login-box">
@@ -92,20 +96,14 @@
         </div>
     </div>
 
+    <!-- 控制面板 (搜尋功能) -->
     <div id="control-panel">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-            <h4>訂單管理 <span id="staff-badge" style="display:none; font-size:10px; background:var(--primary); color:white; padding:2px 6px; border-radius:10px; margin-left:5px;">管理員模式</span></h4>
+            <h4>訂單篩選 <span id="staff-badge" style="display:none; font-size:10px; background:var(--primary); color:white; padding:2px 6px; border-radius:10px; margin-left:5px;">管理員模式</span></h4>
             <div class="btn-group">
                 <button class="btn-reload" id="reloadBtn" onclick="reloadData()">更新資料</button>
                 <button class="btn-logout" onclick="location.reload()">登出</button>
             </div>
-        </div>
-
-        <!-- 狀態篩選按鈕 -->
-        <div class="status-toggle-group">
-            <button id="tab-unshipped" class="active" onclick="setStatusFilter('unshipped')">未出貨</button>
-            <button id="tab-shipped" onclick="setStatusFilter('shipped')">已出貨</button>
-            <button id="tab-all" onclick="setStatusFilter('all')">全部</button>
         </div>
 
         <div class="filter-grid">
@@ -116,21 +114,35 @@
         </div>
     </div>
 
-    <div id="result-header" class="status-bar" style="display:none;">
-        <div id="status-msg" class="count-tag"></div>
-        <div class="sort-controls">
-            <select id="sortField" onchange="handleSort()">
-                <option value="id" selected>單號排序</option>
-                <option value="date">送貨日期</option>
-            </select>
-            <div class="order-toggle">
-                <span id="order-asc" onclick="setSortOrder('asc')">升序</span>
-                <span id="order-desc" class="active" onclick="setSortOrder('desc')">降序</span>
+    <!-- 列表顯示區塊 (包含狀態按鈕與排序) -->
+    <div id="display-section" style="display:none;">
+        
+        <!-- 狀態篩選按鈕 (置於最上方) -->
+        <div class="status-toggle-wrapper">
+            <div class="status-toggle-group">
+                <button id="tab-unshipped" class="active" onclick="setStatusFilter('unshipped')">未出貨</button>
+                <button id="tab-shipped" onclick="setStatusFilter('shipped')">已出貨</button>
+                <button id="tab-all" onclick="setStatusFilter('all')">全部</button>
             </div>
         </div>
+
+        <!-- 排序控制與數量 -->
+        <div id="result-header" class="status-bar">
+            <div id="status-msg" class="count-tag"></div>
+            <div class="sort-controls">
+                <select id="sortField" onchange="handleSort()">
+                    <option value="id" selected>單號排序</option>
+                    <option value="date">送貨日期</option>
+                </select>
+                <div class="order-toggle">
+                    <span id="order-asc" onclick="setSortOrder('asc')">升序</span>
+                    <span id="order-desc" class="active" onclick="setSortOrder('desc')">降序</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="result-list"></div>
     </div>
-    
-    <div id="result-list"></div>
 </div>
 
 <script>
@@ -145,7 +157,7 @@
     let isStaff = false;
     let filteredData = [];
     let currentSortOrder = 'desc';
-    let currentStatusTab = 'unshipped'; // 預設為未出貨
+    let currentStatusTab = 'unshipped';
 
     function parseCSVStrict(str) {
         const arr = [];
@@ -213,12 +225,10 @@
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
-            document.getElementById('result-header').style.display = "flex";
+            document.getElementById('display-section').style.display = "block";
             if(isStaff) document.getElementById('staff-badge').style.display = "inline-block";
             
-            // 取消日期預設，保持欄位空白
             document.getElementById('filter-start').value = "";
-            
             applyFilters();
         } else {
             document.getElementById('login-msg').style.display = "block";
@@ -227,7 +237,6 @@
         }
     }
 
-    // 狀態按鈕點擊處理
     function setStatusFilter(status) {
         currentStatusTab = status;
         document.querySelectorAll('.status-toggle-group button').forEach(btn => btn.classList.remove('active'));
@@ -253,12 +262,12 @@
         const eT = e ? new Date(e).setHours(23,59,59,999) : null;
 
         filteredData = allSupplierData.filter(r => {
-            // 1. 狀態篩選
+            // 狀態篩選
             const shipStatus = (r[9] || "").trim();
             if (currentStatusTab === 'unshipped' && shipStatus === '已出貨') return false;
             if (currentStatusTab === 'shipped' && shipStatus !== '已出貨') return false;
 
-            // 2. 日期與關鍵字篩選
+            // 日期關鍵字篩選
             const d = parseDateSmart(r[5]);
             let dM = true;
             if (sT || eT) {
@@ -341,7 +350,7 @@
             
             btn.innerText = "已回報出貨";
             btn.classList.add('shipped');
-            alert('系統已更新！可於5分鐘後點擊更新資料重新載入資料確認');
+            alert('系統已更新！請稍後點擊「更新資料」同步。');
         } catch (error) {
             alert('連線失敗，請重試');
             btn.disabled = false;
