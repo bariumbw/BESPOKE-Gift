@@ -32,6 +32,20 @@
         .btn-reload { background: var(--success); color: white; }
         .btn-logout { background: #bdc3c7; }
 
+        /* 已出貨按鈕樣式 */
+        .btn-ship { 
+            background: #e8aeb7; 
+            color: white; 
+            padding: 8px 12px; 
+            font-size: 13px; 
+            border-radius: 6px; 
+            margin-top: 10px;
+            width: 100%;
+            border: none;
+            transition: 0.3s;
+        }
+        .btn-ship.shipped { background: #bdc3c7; cursor: not-allowed; opacity: 0.7; }
+
         .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 5px; flex-wrap: wrap; gap: 10px; }
         .sort-controls { display: flex; align-items: center; gap: 8px; }
         
@@ -41,7 +55,7 @@
         .order-toggle span { padding: 8px 12px; transition: 0.3s; cursor: pointer; font-size: 13px; }
         .order-toggle span.active { background: var(--success); color: white; }
 
-        .order-card { background: #fff; border: 1px solid #f2e1e4; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--accent); }
+        .order-card { background: #fff; border: 1px solid #f2e1e4; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--accent); position: relative; }
         .info-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
         .label { font-size: 12px; color: #a1a1a1; font-weight: bold; margin-bottom: 4px; display: block; }
         .val { font-size: 14px; color: var(--text); white-space: pre-wrap; word-break: break-all; margin-bottom: 12px; line-height: 1.5; }
@@ -51,41 +65,14 @@
         .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 5px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ============================================================
-           手機專屬額外樣式 (螢幕寬度 < 600px)
-           ============================================================ */
         @media (max-width: 600px) {
             body { padding: 8px; }
             .container { padding: 12px; margin: 5px auto; overflow: hidden; }
-            
-            #control-panel .btn-group { width: 100%; order: -1; margin-bottom: 15px; }
-            #control-panel .btn-group button { flex: 1; font-size: 13px; }
-            
             #control-panel h4 { width: 100%; text-align: left; margin-bottom: 10px; }
-            #control-panel > div:first-child { flex-direction: column; align-items: flex-start !important; }
-            
-            .filter-grid { 
-                grid-template-columns: 1fr 1fr; 
-                gap: 12px; 
-                width: 100%; 
-            }
-            .filter-grid input { 
-                font-size: 11px; 
-                padding: 4px 2px; 
-                border: 1px solid #eee; 
-                width: 100%; 
-                margin: 0; 
-                height: 32px; 
-            }
-            .filter-grid .label { font-size: 10px; margin-bottom: 2px; }
-            
-            .status-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
-            .sort-controls { width: 100%; justify-content: space-between; }
-
-            .order-card { padding: 15px; margin-bottom: 12px; box-sizing: border-box; }
+            .filter-grid { grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+            .filter-grid input { font-size: 11px; padding: 4px 2px; border: 1px solid #eee; width: 100%; height: 32px; }
+            .order-card { padding: 15px; }
             .info-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .val { font-size: 14px; margin-bottom: 8px; }
-            .label { font-size: 11px; }
         }
     </style>
 </head>
@@ -138,7 +125,9 @@
 
 <script>
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwHYfZLtVU1h9H1TZun9YkhVQ-S2VNMaDD8h-JlI0I8eDvmJuc4J6G51n0fVXzkOU_V/exec';
     const STAFF_KEY = "BESPOKE01"; 
+    
     let allSupplierData = [];
     let currentKey = "";
     let isStaff = false;
@@ -182,7 +171,6 @@
             const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
             const text = await resp.text();
             const rows = parseCSVStrict(text);
-            
             if (isStaff) {
                 allSupplierData = rows.slice(1).filter(r => r[3]); 
             } else {
@@ -196,19 +184,15 @@
     async function doLogin() {
         currentKey = document.getElementById('supplierKey').value.trim();
         if (!currentKey) return;
-        
         const btn = document.getElementById('loginBtn');
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span>';
-        
         isStaff = (currentKey.toUpperCase() === STAFF_KEY);
-        
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
             document.getElementById('result-header').style.display = "flex";
             if(isStaff) document.getElementById('staff-badge').style.display = "inline-block";
-            
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('filter-start').value = today;
             applyFilters();
@@ -226,6 +210,30 @@
         await loadDataFromServer();
         applyFilters();
         setTimeout(() => { btn.disabled = false; btn.innerText = "更新資料"; }, 500);
+    }
+
+    function applyFilters() {
+        const s = document.getElementById('filter-start').value;
+        const e = document.getElementById('filter-end').value;
+        const nk = document.getElementById('filter-name').value.toLowerCase();
+        const ik = document.getElementById('filter-id').value.toLowerCase();
+        const sT = s ? new Date(s).setHours(0,0,0,0) : null;
+        const eT = e ? new Date(e).setHours(23,59,59,999) : null;
+
+        filteredData = allSupplierData.filter(r => {
+            const d = parseDateSmart(r[5]);
+            let dM = true;
+            if (sT || eT) {
+                if (!d) { dM = false; } 
+                else {
+                    const dt = d.getTime();
+                    if (sT && dt < sT) dM = false;
+                    if (eT && dt > eT) dM = false;
+                }
+            }
+            return dM && (r[4]||"").toLowerCase().includes(nk) && (r[3]||"").toLowerCase().includes(ik);
+        });
+        handleSort();
     }
 
     function setSortOrder(order) {
@@ -247,29 +255,12 @@
         renderList(filteredData);
     }
 
-    function applyFilters() {
-        const s = document.getElementById('filter-start').value;
-        const e = document.getElementById('filter-end').value;
-        const nk = document.getElementById('filter-name').value.toLowerCase();
-        const ik = document.getElementById('filter-id').value.toLowerCase();
-        const sT = s ? new Date(s).setHours(0,0,0,0) : null;
-        const eT = e ? new Date(e).setHours(23,59,59,999) : null;
-
-        filteredData = allSupplierData.filter(r => {
-            const d = parseDateSmart(r[5]);
-            let dM = true;
-            if (sT && (!d || d.getTime() < sT)) dM = false;
-            if (eT && (!d || d.getTime() > eT)) dM = false;
-            return dM && (r[4]||"").toLowerCase().includes(nk) && (r[3]||"").toLowerCase().includes(ik);
-        });
-        handleSort();
-    }
-
     function renderList(data) {
         const area = document.getElementById('result-list');
         area.innerHTML = "";
         document.getElementById('status-msg').innerText = `已找到 ${data.length} 筆訂單`;
         data.forEach(r => {
+            const isShipped = (r[9] && r[9].trim() === "已出貨");
             const card = document.createElement('div');
             card.className = 'order-card';
             card.innerHTML = `
@@ -287,9 +278,38 @@
                         ${isStaff ? `<span class="label">供應商識別碼</span><div class="val" style="color:#7f8c8d; font-size:12px;">${r[2] || '-'}</div>` : ''}
                     </div>
                 </div>
+                <button id="btn-${r[3]}" class="btn-ship ${isShipped ? 'shipped' : ''}" 
+                        onclick="updateShipStatus('${r[3]}')" ${isShipped ? 'disabled' : ''}>
+                    ${isShipped ? '已回報出貨' : '確認已出貨 (通知後端)'}
+                </button>
             `;
             area.appendChild(card);
         });
+    }
+
+    async function updateShipStatus(orderId) {
+        if (!confirm('確認將訂單 ' + orderId + ' 標註為「已出貨」嗎？')) return;
+        
+        const btn = document.getElementById(`btn-${orderId}`);
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = "正在更新系統...";
+
+        try {
+            await fetch(GAS_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ orderId: orderId })
+            });
+            
+            btn.innerText = "已回報出貨";
+            btn.classList.add('shipped');
+            alert('系統已更新！請稍候再查看 Google Sheet 確認。');
+        } catch (error) {
+            alert('連線失敗，請重試');
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
     }
 </script>
 </body>
