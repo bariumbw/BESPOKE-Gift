@@ -19,7 +19,8 @@
         .header-logo { width: 90px; margin-bottom: 15px; display: block; }
         
         #login-section { text-align: center; padding: 30px 0; }
-        .login-box { max-width: 350px; margin: 0 auto; }
+        .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
+        .login-box label { font-size: 13px; color: #888; margin-bottom: 5px; display: block; font-weight: bold; }
         
         #control-panel { display: none; background: #fef9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #f2e1e4; box-sizing: border-box; }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
@@ -81,11 +82,16 @@
     <img src="https://www.bespoke-mall.com/pub/media/webp_image/logo/stores/1/BespokeMallv4.webp" alt="LOGO" class="header-logo">
 
     <div id="login-section">
-        <h2>供應商管理系統</h2>
+        <h2 style="text-align:center;">供應商管理系統</h2>
         <div class="login-box">
-            <input type="text" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:10px; border-color: #f2e1e4;">
+            <label for="supplierEmail">Email :</label>
+            <input type="email" id="supplierEmail" placeholder="請輸入登記之電子郵件" style="width:100%; margin-bottom:15px; border-color: #f2e1e4;">
+            
+            <label for="supplierKey">識別碼 :</label>
+            <input type="text" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:20px; border-color: #f2e1e4;">
+            
             <button id="loginBtn" onclick="doLogin()" style="width:100%;">登入</button>
-            <p id="login-msg" style="color:#e8aeb7; font-size:14px; display:none; margin-top:10px; font-weight: bold;">找不到此識別碼，請確認資料格式</p>
+            <p id="login-msg" style="color:#e8aeb7; font-size:14px; display:none; margin-top:15px; text-align:center; font-weight: bold;">登入失敗：Email 或識別碼錯誤</p>
         </div>
     </div>
 
@@ -126,9 +132,11 @@
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzA3WeU5uFcAmhUdM-mSQIPLGvD8aBx1SiMOPzccD8kPPdO2nososJccmB57ras_BXq/exec';
     const STAFF_KEY = "BESPOKE01"; 
+    const STAFF_EMAIL = "support@bespoke-mall.com";
     
     let allSupplierData = [];
     let currentKey = "";
+    let currentEmail = "";
     let isStaff = false;
     let filteredData = [];
     let currentSortOrder = 'desc';
@@ -170,23 +178,34 @@
             const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
             const text = await resp.text();
             const rows = parseCSVStrict(text);
+            const headers = rows[0];
+            
             if (isStaff) {
                 allSupplierData = rows.slice(1).filter(r => r[3]); 
             } else {
                 const sk = currentKey.trim().toLowerCase();
-                allSupplierData = rows.filter(r => r[2] && r[2].trim().toLowerCase() === sk);
+                const se = currentEmail.trim().toLowerCase();
+                // 同時比對第 3 欄 (Index 2) 識別碼與第 13 欄 (Index 12) Email
+                allSupplierData = rows.filter(r => 
+                    r[2] && r[2].trim().toLowerCase() === sk && 
+                    r[12] && r[12].trim().toLowerCase() === se
+                );
             }
             return allSupplierData.length > 0;
         } catch (e) { return false; }
     }
 
     async function doLogin() {
+        currentEmail = document.getElementById('supplierEmail').value.trim();
         currentKey = document.getElementById('supplierKey').value.trim();
-        if (!currentKey) return;
+        if (!currentKey || !currentEmail) return;
+
         const btn = document.getElementById('loginBtn');
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span>';
-        isStaff = (currentKey.toUpperCase() === STAFF_KEY);
+        
+        isStaff = (currentKey.toUpperCase() === STAFF_KEY && currentEmail.toLowerCase() === STAFF_EMAIL);
+        
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
