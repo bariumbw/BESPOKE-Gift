@@ -12,16 +12,15 @@
         .container { max-width: 900px; margin: 20px auto; background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); box-sizing: border-box; }
         .header-logo { width: 120px; margin: 0 auto 25px; display: block; }
         
-        /* 登入視窗 */
-        #login-section { text-align: center; padding: 40px 0; }
-        .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
-        .login-box input { width: 100%; margin-bottom: 20px; border: 1px solid var(--border); padding: 12px; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        
         /* 管理面板 */
         #control-panel { display: none; background: #fffcfd; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border); }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
         input, button, select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; outline: none; }
         
+        /* 更新資料按鈕（點擊後僅顯示旋轉圖示） */
+        .btn-refresh { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; min-width: 90px; height: 38px; display: flex; align-items: center; justify-content: center; }
+        .btn-refresh:disabled { background: #bdc3c7; cursor: not-allowed; }
+
         /* 頁籤與排序工具列 */
         .status-toggle-group { display: flex; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
         .status-toggle-group button { flex: 1; background: white; color: var(--primary); border: none; border-right: 1px solid var(--accent); padding: 14px; font-weight: bold; cursor: pointer; font-size: 14px; }
@@ -45,9 +44,15 @@
         .btn-ship.shipped { background: #dcdde1; color: #7f8c8d; cursor: not-allowed; }
         .ship-time { font-size: 13px; color: var(--success); font-weight: bold; margin-top: 5px; display: block; }
         
-        .loading-spin { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 8px; }
+        /* 旋轉動畫 */
+        .loading-spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
+        /* 登入樣式 */
+        #login-section { text-align: center; padding: 40px 0; }
+        .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
+        .login-box input { width: 100%; margin-bottom: 20px; border: 1px solid var(--border); padding: 12px; border-radius: 6px; box-sizing: border-box; }
+
         @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; gap: 0; } }
     </style>
 </head>
@@ -70,8 +75,8 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h3 style="margin:0; color:var(--primary);">訂單查詢與出貨回報</h3>
             <div style="display:flex; gap:10px;">
-                <button onclick="reloadData()" style="background:var(--success); color:white; border:none; padding:8px 15px; border-radius:5px;">更新資料</button>
-                <button onclick="location.reload()" style="background:#bdc3c7; color:white; border:none; padding:8px 15px; border-radius:5px;">登出</button>
+                <button onclick="reloadData()" id="refreshBtn" class="btn-refresh">更新資料</button>
+                <button onclick="location.reload()" style="background:#bdc3c7; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">登出</button>
             </div>
         </div>
         <div class="filter-grid">
@@ -137,7 +142,7 @@
         currentKey = document.getElementById('supplierKey').value.trim();
         if (!currentKey || !currentEmail) return;
         const btn = document.getElementById('loginBtn');
-        btn.disabled = true; btn.innerHTML = '<span class="loading-spin"></span>驗證中...';
+        btn.disabled = true; btn.innerHTML = '<span class="loading-spin"></span>';
         isStaff = (currentKey.toUpperCase() === "BESPOKE01" && currentEmail.toLowerCase() === "support@bespoke-mall.com");
         if (await loadData()) {
             document.getElementById('login-section').style.display = "none";
@@ -244,7 +249,7 @@
     async function confirmShip(orderId) {
         if (!confirm(`確認單號 #${orderId} 出貨？`)) return;
         const btn = document.getElementById(`btn-${orderId}`);
-        btn.disabled = true; btn.innerHTML = '<span class="loading-spin"></span>同步中...';
+        btn.disabled = true; btn.innerHTML = '<span class="loading-spin"></span>';
         try {
             await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ orderId: orderId }) });
             alert('系統已更新！可於5分鐘後可點擊更新資料重新載入資料確認');
@@ -254,8 +259,16 @@
     }
 
     async function reloadData() {
+        const btn = document.getElementById('refreshBtn');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spin"></span>';
+        
         await loadData();
         applyFilters();
+        
+        btn.disabled = false;
+        btn.innerText = originalText;
     }
 </script>
 </body>
