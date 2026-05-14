@@ -18,58 +18,48 @@
         .container { max-width: 900px; margin: 20px auto; background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); box-sizing: border-box; }
         .header-logo { width: 90px; margin-bottom: 15px; display: block; }
         
+        /* 登入樣式 */
         #login-section { text-align: center; padding: 30px 0; }
         .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
         .login-box label { font-size: 13px; color: #888; margin-bottom: 5px; display: block; font-weight: bold; }
         
+        /* 控制面板 */
         #control-panel { display: none; background: #fef9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f2e1e4; box-sizing: border-box; }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
         
-        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
         input, button, select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; }
-        
         button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
-        button:hover { opacity: 0.8; }
         .btn-reload { background: var(--success); color: white; }
         .btn-logout { background: #bdc3c7; }
 
-        /* 狀態切換按鈕樣式 - 置於列表上方 */
+        /* 狀態切換按鈕組 */
         .status-toggle-wrapper { margin-bottom: 15px; display: flex; justify-content: center; }
-        .status-toggle-group { display: flex; gap: 0; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; width: 100%; max-width: 400px; }
-        .status-toggle-group button { 
-            flex: 1; background: white; color: var(--primary); padding: 10px; border-radius: 0; font-size: 14px; border-right: 1px solid var(--accent);
-        }
+        .status-toggle-group { display: flex; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; width: 100%; max-width: 400px; }
+        .status-toggle-group button { flex: 1; background: white; color: var(--primary); padding: 10px; border-radius: 0; font-size: 14px; border-right: 1px solid var(--accent); }
         .status-toggle-group button:last-child { border-right: none; }
         .status-toggle-group button.active { background: var(--success); color: white; }
 
-        .btn-ship { 
-            background: #e8aeb7; color: white; padding: 10px 12px; font-size: 13px; border-radius: 6px; margin-top: 10px; width: 100%; border: none; transition: 0.3s;
-        }
-        .btn-ship.shipped { background: #bdc3c7; cursor: not-allowed; opacity: 0.7; }
-
+        /* 排序與計數列 */
         .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--accent); }
         .sort-controls { display: flex; align-items: center; gap: 8px; }
-        
-        select { background-color: white; border-color: var(--accent); }
-        
-        .order-toggle { background: #fff; color: var(--primary); border: 1px solid var(--accent); display: flex; padding: 0; overflow: hidden; border-radius: 6px; }
-        .order-toggle span { padding: 8px 12px; transition: 0.3s; cursor: pointer; font-size: 13px; }
+        .order-toggle { background: #fff; color: var(--primary); border: 1px solid var(--accent); display: flex; overflow: hidden; border-radius: 6px; }
+        .order-toggle span { padding: 8px 12px; cursor: pointer; font-size: 13px; }
         .order-toggle span.active { background: var(--success); color: white; }
 
+        /* 訂單卡片 */
         .order-card { background: #fff; border: 1px solid #f2e1e4; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--accent); position: relative; }
         .info-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
-        .label { font-size: 12px; color: #a1a1a1; font-weight: bold; margin-bottom: 4px; display: block; }
-        .val { font-size: 14px; color: var(--text); white-space: pre-wrap; word-break: break-all; margin-bottom: 12px; line-height: 1.5; }
+        .label { font-size: 11px; color: #a1a1a1; font-weight: bold; margin-bottom: 4px; display: block; }
+        .val { font-size: 14px; color: var(--text); margin-bottom: 12px; line-height: 1.5; }
+        .ship-time-tag { font-size: 11px; color: #e8aeb7; margin-top: 5px; font-style: italic; display: block; font-weight: bold; }
         
-        h2, h4 { margin-top: 0; color: var(--primary); }
-        .count-tag { font-size: 14px; color: #999; font-weight: bold; }
+        .btn-ship { background: #e8aeb7; color: white; padding: 10px; width: 100%; border-radius: 6px; margin-top: 10px; border: none; font-size: 13px; }
+        .btn-ship.shipped { background: #bdc3c7; cursor: not-allowed; opacity: 0.7; }
+
         .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 5px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 600px) {
-            body { padding: 8px; }
-            .container { padding: 15px 12px; margin: 5px auto; }
-            .filter-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
             .info-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
             .status-bar { flex-direction: column; align-items: flex-start; }
             .sort-controls { width: 100%; justify-content: space-between; }
@@ -81,43 +71,40 @@
 <div class="container">
     <img src="https://www.bespoke-mall.com/pub/media/webp_image/logo/stores/1/BespokeMallv4.webp" alt="LOGO" class="header-logo">
 
-    <!-- 登入區塊 -->
+    <!-- 登入介面 -->
     <div id="login-section">
-        <h2 style="text-align:center;">供應商管理系統</h2>
+        <h2>供應商管理系統</h2>
         <div class="login-box">
-            <label for="supplierEmail">Email :</label>
-            <input type="email" id="supplierEmail" placeholder="請輸入登記之電子郵件" style="width:100%; margin-bottom:15px; border-color: #f2e1e4;">
-            
-            <label for="supplierKey">識別碼 :</label>
-            <input type="password" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:20px; border-color: #f2e1e4;">
-            
+            <label>Email :</label>
+            <input type="email" id="supplierEmail" placeholder="請輸入登記之電子郵件" style="width:100%; margin-bottom:15px;">
+            <label>識別碼 :</label>
+            <input type="password" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:20px;">
             <button id="loginBtn" onclick="doLogin()" style="width:100%;">登入</button>
-            <p id="login-msg" style="color:#e8aeb7; font-size:14px; display:none; margin-top:15px; text-align:center; font-weight: bold;">登入失敗：Email 或識別碼錯誤</p>
+            <p id="login-msg" style="color:#e8aeb7; font-size:14px; display:none; margin-top:15px; text-align:center;">登入失敗：Email 或識別碼錯誤</p>
         </div>
     </div>
 
-    <!-- 控制面板 (搜尋功能) -->
+    <!-- 搜尋控制台 -->
     <div id="control-panel">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-            <h4>訂單篩選 <span id="staff-badge" style="display:none; font-size:10px; background:var(--primary); color:white; padding:2px 6px; border-radius:10px; margin-left:5px;">管理員模式</span></h4>
-            <div class="btn-group">
+            <h4>訂單篩選 <span id="staff-badge" style="display:none; font-size:10px; background:var(--primary); color:white; padding:2px 6px; border-radius:10px; margin-left:5px;">管理員</span></h4>
+            <div style="display:flex; gap:8px;">
                 <button class="btn-reload" id="reloadBtn" onclick="reloadData()">更新資料</button>
                 <button class="btn-logout" onclick="location.reload()">登出</button>
             </div>
         </div>
-
         <div class="filter-grid">
             <div><span class="label">日期 (起)</span><input type="date" id="filter-start" onchange="applyFilters()"></div>
             <div><span class="label">日期 (迄)</span><input type="date" id="filter-end" onchange="applyFilters()"></div>
-            <div><span class="label">姓名</span><input type="text" id="filter-name" placeholder="搜尋..." oninput="applyFilters()"></div>
-            <div><span class="label">單號</span><input type="text" id="filter-id" placeholder="搜尋..." oninput="applyFilters()"></div>
+            <div><span class="label">姓名</span><input type="text" id="filter-name" placeholder="搜尋姓名..." oninput="applyFilters()"></div>
+            <div><span class="label">單號</span><input type="text" id="filter-id" placeholder="搜尋單號..." oninput="applyFilters()"></div>
         </div>
     </div>
 
-    <!-- 列表顯示區塊 (包含狀態按鈕與排序) -->
+    <!-- 列表顯示區 -->
     <div id="display-section" style="display:none;">
         
-        <!-- 狀態篩選按鈕 (置於最上方) -->
+        <!-- 1. 狀態篩選按鈕 (最上方) -->
         <div class="status-toggle-wrapper">
             <div class="status-toggle-group">
                 <button id="tab-unshipped" class="active" onclick="setStatusFilter('unshipped')">未出貨</button>
@@ -126,9 +113,9 @@
             </div>
         </div>
 
-        <!-- 排序控制與數量 -->
+        <!-- 2. 排序與計數 -->
         <div id="result-header" class="status-bar">
-            <div id="status-msg" class="count-tag"></div>
+            <div id="status-msg" style="font-size:14px; color:#999; font-weight:bold;"></div>
             <div class="sort-controls">
                 <select id="sortField" onchange="handleSort()">
                     <option value="id" selected>單號排序</option>
@@ -148,68 +135,10 @@
 <script>
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzA3WeU5uFcAmhUdM-mSQIPLGvD8aBx1SiMOPzccD8kPPdO2nososJccmB57ras_BXq/exec';
-    const STAFF_KEY = "BESPOKE01"; 
-    const STAFF_EMAIL = "support@bespoke-mall.com";
     
     let allSupplierData = [];
-    let currentKey = "";
-    let currentEmail = "";
-    let isStaff = false;
-    let filteredData = [];
-    let currentSortOrder = 'desc';
-    let currentStatusTab = 'unshipped';
-
-    function parseCSVStrict(str) {
-        const arr = [];
-        let quote = false;
-        for (let row = col = c = 0; c < str.length; c++) {
-            let cc = str[c], nc = str[c+1];
-            arr[row] = arr[row] || [];
-            arr[row][col] = arr[row][col] || '';
-            if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
-            if (cc == '"') { quote = !quote; continue; }
-            if (cc == ',' && !quote) { ++col; continue; }
-            if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
-            if (cc == '\n' && !quote) { ++row; col = 0; continue; }
-            if (cc == '\r' && !quote) { ++row; col = 0; continue; }
-            arr[row][col] += cc;
-        }
-        return arr;
-    }
-
-    function parseDateSmart(dateStr) {
-        if (!dateStr || dateStr === '-' || dateStr.trim() === "") return null;
-        let d = new Date(dateStr);
-        if (!isNaN(d.getTime())) return d;
-        const m = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-        if (m) return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
-        return null;
-    }
-
-    function formatDate(dateStr) {
-        const d = parseDateSmart(dateStr);
-        return d ? `${d.getFullYear()}年${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日` : (dateStr || '-');
-    }
-
-    async function loadDataFromServer() {
-        try {
-            const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
-            const text = await resp.text();
-            const rows = parseCSVStrict(text);
-            
-            if (isStaff) {
-                allSupplierData = rows.slice(1).filter(r => r[3]); 
-            } else {
-                const sk = currentKey.trim().toLowerCase();
-                const se = currentEmail.trim().toLowerCase();
-                allSupplierData = rows.filter(r => 
-                    r[2] && r[2].trim().toLowerCase() === sk && 
-                    r[12] && r[12].trim().toLowerCase() === se
-                );
-            }
-            return allSupplierData.length > 0;
-        } catch (e) { return false; }
-    }
+    let currentKey = "", currentEmail = "";
+    let isStaff = false, filteredData = [], currentSortOrder = 'desc', currentStatusTab = 'unshipped';
 
     async function doLogin() {
         currentEmail = document.getElementById('supplierEmail').value.trim();
@@ -220,7 +149,7 @@
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span>';
         
-        isStaff = (currentKey.toUpperCase() === STAFF_KEY && currentEmail.toLowerCase() === STAFF_EMAIL);
+        isStaff = (currentKey.toUpperCase() === "BESPOKE01" && currentEmail.toLowerCase() === "support@bespoke-mall.com");
         
         if (await loadDataFromServer()) {
             document.getElementById('login-section').style.display = "none";
@@ -228,13 +157,32 @@
             document.getElementById('display-section').style.display = "block";
             if(isStaff) document.getElementById('staff-badge').style.display = "inline-block";
             
+            // 取消日期預設
             document.getElementById('filter-start').value = "";
             applyFilters();
         } else {
             document.getElementById('login-msg').style.display = "block";
-            btn.disabled = false;
-            btn.innerText = "登入";
+            btn.disabled = false; btn.innerText = "登入";
         }
+    }
+
+    async function loadDataFromServer() {
+        try {
+            const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
+            const text = await resp.text();
+            // 簡易 CSV 解析
+            const rows = text.split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
+            
+            if (isStaff) {
+                allSupplierData = rows.slice(1).filter(r => r[3]); 
+            } else {
+                allSupplierData = rows.filter(r => 
+                    r[2]?.toLowerCase() === currentKey.toLowerCase() && 
+                    r[12]?.toLowerCase() === currentEmail.toLowerCase()
+                );
+            }
+            return allSupplierData.length > 0;
+        } catch (e) { return false; }
     }
 
     function setStatusFilter(status) {
@@ -244,43 +192,32 @@
         applyFilters();
     }
 
-    async function reloadData() {
-        const btn = document.getElementById('reloadBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spin"></span>';
-        await loadDataFromServer();
-        applyFilters();
-        setTimeout(() => { btn.disabled = false; btn.innerText = "更新資料"; }, 500);
-    }
-
     function applyFilters() {
         const s = document.getElementById('filter-start').value;
         const e = document.getElementById('filter-end').value;
         const nk = document.getElementById('filter-name').value.toLowerCase();
         const ik = document.getElementById('filter-id').value.toLowerCase();
-        const sT = s ? new Date(s).setHours(0,0,0,0) : null;
-        const eT = e ? new Date(e).setHours(23,59,59,999) : null;
-
+        
         filteredData = allSupplierData.filter(r => {
-            // 狀態篩選
+            // 1. 狀態篩選 (預設顯示未出貨)
             const shipStatus = (r[9] || "").trim();
             if (currentStatusTab === 'unshipped' && shipStatus === '已出貨') return false;
             if (currentStatusTab === 'shipped' && shipStatus !== '已出貨') return false;
 
-            // 日期關鍵字篩選
-            const d = parseDateSmart(r[5]);
-            let dM = true;
-            if (sT || eT) {
-                if (!d) { dM = false; } 
-                else {
-                    const dt = d.getTime();
-                    if (sT && dt < sT) dM = false;
-                    if (eT && dt > eT) dM = false;
-                }
-            }
-            return dM && (r[4]||"").toLowerCase().includes(nk) && (r[3]||"").toLowerCase().includes(ik);
+            // 2. 關鍵字篩選
+            return (r[4]||"").toLowerCase().includes(nk) && (r[3]||"").toLowerCase().includes(ik);
         });
         handleSort();
+    }
+
+    function handleSort() {
+        const field = document.getElementById('sortField').value;
+        filteredData.sort((a, b) => {
+            const valA = a[field === 'id' ? 3 : 5] || "";
+            const valB = b[field === 'id' ? 3 : 5] || "";
+            return currentSortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        });
+        renderList(filteredData);
     }
 
     function setSortOrder(order) {
@@ -290,39 +227,30 @@
         handleSort();
     }
 
-    function handleSort() {
-        const field = document.getElementById('sortField').value;
-        const isAsc = currentSortOrder === 'asc';
-        filteredData.sort((a, b) => {
-            if (field === 'id') return isAsc ? (a[3]||"").localeCompare(b[3]||"", undefined, {numeric: true}) : (b[3]||"").localeCompare(a[3]||"", undefined, {numeric: true});
-            const dA = parseDateSmart(a[5])?.getTime() || 0;
-            const dB = parseDateSmart(b[5])?.getTime() || 0;
-            return isAsc ? (dA - dB) : (dB - dA);
-        });
-        renderList(filteredData);
-    }
-
     function renderList(data) {
         const area = document.getElementById('result-list');
         area.innerHTML = "";
-        document.getElementById('status-msg').innerText = `已找到 ${data.length} 筆訂單`;
+        document.getElementById('status-msg').innerText = `找到 ${data.length} 筆訂單`;
+        
         data.forEach(r => {
-            const isShipped = (r[9] && r[9].trim() === "已出貨");
+            const isShipped = (r[9] === "已出貨");
+            const shipTime = r[10] || ""; // 獲取 K 欄的時間記錄
+            
             const card = document.createElement('div');
             card.className = 'order-card';
             card.innerHTML = `
                 <div class="info-grid">
-                    <div class="col-left">
-                        <span class="label">下單日期</span><div class="val">${formatDate(r[1])}</div>
+                    <div>
                         <span class="label">客人姓名</span><div class="val">${r[4] || '-'}</div>
-                        <span class="label">產品及數量</span><div class="val" style="font-weight:bold;">${r[7] || '-'}</div>
-                        <span class="label">備註</span><div class="val">${r[8] || '-'}</div>
+                        <span class="label">產品數量</span><div class="val" style="font-weight:bold;">${r[7] || '-'}</div>
                     </div>
-                    <div class="col-right">
+                    <div>
                         <span class="label">單號</span><div class="val" style="color:var(--primary); font-weight:bold;">${r[3] || '-'}</div>
-                        <span class="label">送貨日期</span><div class="val" style="font-weight:bold;">${formatDate(r[5])}</div>
-                        <span class="label">送貨地址</span><div class="val">${r[6] || '-'}</div>
+                        <span class="label">送貨日期</span><div class="val" style="font-weight:bold;">${r[5] || '-'}</div>
                     </div>
+                </div>
+                <div id="ship-info-${r[3]}">
+                    ${isShipped ? `<span class="ship-time-tag">出貨時間：${shipTime}</span>` : ''}
                 </div>
                 <button id="btn-${r[3]}" class="btn-ship ${isShipped ? 'shipped' : ''}" 
                         onclick="updateShipStatus('${r[3]}')" ${isShipped ? 'disabled' : ''}>
@@ -334,28 +262,47 @@
     }
 
     async function updateShipStatus(orderId) {
-        if (!confirm('確認將訂單 ' + orderId + ' 標註為「已出貨」嗎？')) return;
+        if (!confirm('確認將單號 ' + orderId + ' 標註為「已出貨」並同步至系統？')) return;
         
         const btn = document.getElementById(`btn-${orderId}`);
-        const originalText = btn.innerText;
+        const infoDiv = document.getElementById(`ship-info-${orderId}`);
         btn.disabled = true;
-        btn.innerText = "正在更新系統...";
+        btn.innerHTML = '<span class="loading-spin"></span>同步中...';
+        
+        // 取得本地當前時間 (立即顯示用)
+        const now = new Date();
+        const timestamp = now.getFullYear() + "/" + (now.getMonth()+1).toString().padStart(2, '0') + "/" + now.getDate().toString().padStart(2, '0') + " " + now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0') + ":" + now.getSeconds().toString().padStart(2, '0');
 
         try {
-            await fetch(GAS_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ orderId: orderId })
+            // 發送至 GAS 進行立即同步
+            await fetch(GAS_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ orderId: orderId }) 
             });
             
+            // UI 立即反饋
             btn.innerText = "已回報出貨";
             btn.classList.add('shipped');
-            alert('系統已更新！請稍後點擊「更新資料」同步。');
-        } catch (error) {
-            alert('連線失敗，請重試');
-            btn.disabled = false;
-            btn.innerText = originalText;
+            infoDiv.innerHTML = `<span class="ship-time-tag">出貨時間：${timestamp} (已同步)</span>`;
+            
+            // 同步更新本地數據
+            const target = allSupplierData.find(r => r[3] === orderId);
+            if (target) { target[9] = "已出貨"; target[10] = timestamp; }
+            
+        } catch (e) { 
+            alert('同步失敗，請檢查網路連線'); 
+            btn.disabled = false; 
+            btn.innerText = "確認已出貨";
         }
+    }
+    
+    async function reloadData() {
+        const btn = document.getElementById('reloadBtn');
+        btn.innerHTML = '<span class="loading-spin"></span>';
+        await loadDataFromServer();
+        applyFilters();
+        btn.innerText = "更新資料";
     }
 </script>
 </body>
