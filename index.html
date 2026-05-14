@@ -81,30 +81,36 @@
                 <button id="tab-all" onclick="setStatusFilter('all')">全部</button>
             </div>
         </div>
-        <div class="status-bar">
-            <div id="status-msg" style="font-weight:bold; color:var(--primary);"></div>
-            <div class="sort-controls">
-                <select id="sortField" onchange="handleSort()">
-                    <option value="id">按單號</option>
-                    <option value="date" selected>按日期</option>
-                </select>
-                <div class="order-toggle">
-                    <span id="order-asc" onclick="setSortOrder('asc')">升序</span>
-                    <span id="order-desc" class="active" onclick="setSortOrder('desc')">降序</span>
-                </div>
-            </div>
-        </div>
         <div id="result-list"></div>
     </div>
 </div>
 
 <script>
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwtoypHyFl1VT0boxpe8_RCSt0c8Z1NdxkfMenIn6GQp5EYbbF2JhZia3yTU31uWEG2/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwqz4F-cTgWkXFaB8lAcMdvHt8a7h80RWXtYSGSV4mU-rmYUoInWKpXvGyOXnP3BX3C/exec';
     
     let allData = [];
     let currentKey = "", currentEmail = "";
     let isStaff = false, filteredData = [], sortOrder = 'desc', currentTab = 'unshipped';
+
+    // 核心解析函數：防止 CSV 逗號位移
+    function parseCSV(text) {
+        const rows = text.split(/\r?\n/);
+        return rows.map(row => {
+            const result = [];
+            let cell = "", inQuotes = false;
+            for (let i = 0; i < row.length; i++) {
+                let char = row[i];
+                if (char === '"') inQuotes = !inQuotes;
+                else if (char === ',' && !inQuotes) {
+                    result.push(cell.trim());
+                    cell = "";
+                } else cell += char;
+            }
+            result.push(cell.trim());
+            return result;
+        });
+    }
 
     async function doLogin() {
         currentEmail = document.getElementById('supplierEmail').value.trim();
@@ -113,7 +119,9 @@
         const btn = document.getElementById('loginBtn');
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span>驗證中...';
+        
         isStaff = (currentKey.toUpperCase() === "BESPOKE01" && currentEmail.toLowerCase() === "support@bespoke-mall.com");
+        
         if (await loadData()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
@@ -129,18 +137,46 @@
         try {
             const resp = await fetch(`${SHEET_CSV}&t=${Date.now()}`);
             const text = await resp.text();
-            // 使用正規表達式解析 CSV，避免內容中的逗號導致位移
-            const rows = text.split('\n').map(row => {
-                const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                return matches ? matches.map(m => m.replace(/^"|"$/g, '').trim()) : [];
-            });
+            const rows = parseCSV(text); // 使用進階解析
+
             if (isStaff) {
                 allData = rows.slice(1).filter(r => r[3]); 
             } else {
-                allData = rows.filter(r => r[2]?.toLowerCase() === currentKey.toLowerCase() && r[12]?.toLowerCase() === currentEmail.toLowerCase());
+                allData = rows.filter(r => 
+                    r[2]?.toLowerCase() === currentKey.toLowerCase() && 
+                    r[12]?.toLowerCase() === currentEmail.toLowerCase()
+                );
             }
             return allData.length > 0;
         } catch (e) { return false; }
+    }
+
+    function applyFilters() {
+        const start = document.getElementById('filter-start').value;
+        const end = document.getElementById('filter-end').value;
+        const nameKey = document.getElementById('filter-name').value.toLowerCase();
+        const idKey = document.getElementById('filter-id').value.toLowerCase();
+
+        filteredData = allData.filter(r => {
+            const status = (r[9] || "").trim();
+            if (currentTab === 'unshipped' && status === '已出貨') return false;
+            if (currentTab === 'shipped' && status !== '已出貨') return false;
+            
+            const matchName = (r[4] || "").toLowerCase().includes(nameKey);
+            const matchId = (r[3] || "").toLowerCase().includes(idKey);
+            
+            let matchDate = true;
+            if (start || end) {
+                const targetDate = new Date(r[5]).getTime();
+                if (start && targetDate < new Date(start).getTime()) matchDate = false;
+                if (end && targetDate > new Date(end).getTime()) matchDate = false;
+            }
+            return matchName && matchId && matchDate;
+        });
+        
+        // 預設按送貨日期(索引5)降序排序
+        filteredData.sort((a, b) => (b[5] || "").localeCompare(a[5] || ""));
+        renderUI();
     }
 
     function setStatusFilter(status) {
@@ -150,52 +186,12 @@
         applyFilters();
     }
 
-    function applyFilters() {
-        const start = document.getElementById('filter-start').value;
-        const end = document.getElementById('filter-end').value;
-        const nameKey = document.getElementById('filter-name').value.toLowerCase();
-        const idKey = document.getElementById('filter-id').value.toLowerCase();
-        filteredData = allData.filter(r => {
-            const status = (r[9] || "").trim();
-            if (currentTab === 'unshipped' && status === '已出貨') return false;
-            if (currentTab === 'shipped' && status !== '已出貨') return false;
-            const matchName = (r[4] || "").toLowerCase().includes(nameKey);
-            const matchId = (r[3] || "").toLowerCase().includes(idKey);
-            let matchDate = true;
-            if (start || end) {
-                const targetDate = new Date(r[5]).getTime();
-                if (start && targetDate < new Date(start).getTime()) matchDate = false;
-                if (end && targetDate > new Date(end).getTime()) matchDate = false;
-            }
-            return matchName && matchId && matchDate;
-        });
-        handleSort();
-    }
-
-    function handleSort() {
-        const field = document.getElementById('sortField').value;
-        filteredData.sort((a, b) => {
-            const valA = a[field === 'id' ? 3 : 5] || "";
-            const valB = b[field === 'id' ? 3 : 5] || "";
-            return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-        });
-        renderUI();
-    }
-
-    function setSortOrder(order) {
-        sortOrder = order;
-        document.getElementById('order-asc').classList.toggle('active', order === 'asc');
-        document.getElementById('order-desc').classList.toggle('active', order === 'desc');
-        handleSort();
-    }
-
     function renderUI() {
         const container = document.getElementById('result-list');
         container.innerHTML = "";
-        document.getElementById('status-msg').innerText = `共 ${filteredData.length} 筆`;
+        
         filteredData.forEach(r => {
             const isDone = (r[9] === "已出貨");
-            const doneTime = r[10] || "";
             const card = document.createElement('div');
             card.className = 'order-card';
             card.innerHTML = `
@@ -211,37 +207,40 @@
                         <span class="label">送貨地址</span><div class="val" style="font-size:12px;">${r[6] || '-'}</div>
                     </div>
                 </div>
-                <div id="box-${r[3]}">${isDone ? `<span class="ship-time-tag">✓ 已於 ${doneTime} 回報</span>` : ''}</div>
-                <button id="btn-${r[3]}" class="btn-ship ${isDone ? 'shipped' : ''}" onclick="confirmShip('${r[3]}')" ${isDone ? 'disabled' : ''}>${isDone ? '已同步' : '確認已出貨'}</button>
+                <div id="box-${r[3]}">${isDone ? `<span class="ship-time-tag">✓ 已於 ${r[10] || ''} 回報出貨</span>` : ''}</div>
+                <button id="btn-${r[3]}" class="btn-ship ${isDone ? 'shipped' : ''}" 
+                        onclick="confirmShip('${r[3]}')" ${isDone ? 'disabled' : ''}>
+                    ${isDone ? '已同步至系統' : '確認已出貨'}
+                </button>
             `;
             container.appendChild(card);
         });
     }
 
     async function confirmShip(orderId) {
-        if (!confirm(`確定將單號 #${orderId} 標註為已出貨？`)) return;
+        if (!confirm(`確認單號 #${orderId} 已出貨？`)) return;
         const btn = document.getElementById(`btn-${orderId}`);
-        const box = document.getElementById(`box-${orderId}`);
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span>同步中...';
-        const now = new Date();
-        const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+        
         try {
-            await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ orderId: orderId }) });
-            btn.innerText = "已同步";
-            btn.classList.add('shipped');
-            box.innerHTML = `<span class="ship-time-tag">✓ 已於 ${timeStr} 回報</span>`;
-            const target = allData.find(r => r[3] === orderId);
-            if (target) { target[9] = "已出貨"; target[10] = timeStr; }
-        } catch (e) { alert('同步失敗'); btn.disabled = false; btn.innerText = "確認已出貨"; }
+            await fetch(GAS_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ orderId: orderId }) 
+            });
+            alert('回報成功！');
+            reloadData();
+        } catch (e) { 
+            alert('連線超時，請檢查網路'); 
+            btn.disabled = false; 
+            btn.innerText = "確認已出貨";
+        }
     }
-    
+
     async function reloadData() {
-        const btn = document.getElementById('reloadBtn');
-        btn.innerHTML = '<span class="loading-spin"></span>';
         await loadData();
         applyFilters();
-        btn.innerText = "更新資料";
     }
 </script>
 </body>
