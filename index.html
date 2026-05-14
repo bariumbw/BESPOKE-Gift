@@ -88,7 +88,8 @@
             <input type="email" id="supplierEmail" placeholder="請輸入登記之電子郵件" style="width:100%; margin-bottom:15px; border-color: #f2e1e4;">
             
             <label for="supplierKey">識別碼 :</label>
-            <input type="text" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:20px; border-color: #f2e1e4;">
+            <!-- 已改為 password 類型，隱藏輸入內容 -->
+            <input type="password" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:20px; border-color: #f2e1e4;">
             
             <button id="loginBtn" onclick="doLogin()" style="width:100%;">登入</button>
             <p id="login-msg" style="color:#e8aeb7; font-size:14px; display:none; margin-top:15px; text-align:center; font-weight: bold;">登入失敗：Email 或識別碼錯誤</p>
@@ -178,14 +179,12 @@
             const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
             const text = await resp.text();
             const rows = parseCSVStrict(text);
-            const headers = rows[0];
             
             if (isStaff) {
                 allSupplierData = rows.slice(1).filter(r => r[3]); 
             } else {
                 const sk = currentKey.trim().toLowerCase();
                 const se = currentEmail.trim().toLowerCase();
-                // 同時比對第 3 欄 (Index 2) 識別碼與第 13 欄 (Index 12) Email
                 allSupplierData = rows.filter(r => 
                     r[2] && r[2].trim().toLowerCase() === sk && 
                     r[12] && r[12].trim().toLowerCase() === se
@@ -293,7 +292,6 @@
                         <span class="label">單號</span><div class="val" style="color:var(--primary); font-weight:bold;">${r[3] || '-'}</div>
                         <span class="label">送貨日期</span><div class="val" style="font-weight:bold;">${formatDate(r[5])}</div>
                         <span class="label">送貨地址</span><div class="val">${r[6] || '-'}</div>
-                        ${isStaff ? `<span class="label">供應商識別碼</span><div class="val" style="color:#7f8c8d; font-size:12px;">${r[2] || '-'}</div>` : ''}
                     </div>
                 </div>
                 <button id="btn-${r[3]}" class="btn-ship ${isShipped ? 'shipped' : ''}" 
