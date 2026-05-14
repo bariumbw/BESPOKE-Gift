@@ -17,7 +17,7 @@
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
         input, button, select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; outline: none; }
         
-        /* 更新資料按鈕（點擊後僅顯示旋轉圖示） */
+        /* 更新資料按鈕 */
         .btn-refresh { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; min-width: 90px; height: 38px; display: flex; align-items: center; justify-content: center; }
         .btn-refresh:disabled { background: #bdc3c7; cursor: not-allowed; }
 
@@ -223,6 +223,8 @@
                     <div>
                         <span class="label">客戶姓名</span>
                         <div class="val" style="font-weight:bold;">${r[4] || '-'}</div>
+                        <span class="label">下單日期</span>
+                        <div class="val" style="font-weight:bold;">${r[1] || '-'}</div>
                         <span class="label">產品內容及數量</span>
                         <div class="val val-product">${r[7] || '-'}</div>
                         <span class="label">備註資訊</span>
