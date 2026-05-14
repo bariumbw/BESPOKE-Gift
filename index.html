@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>供應商管理系統</title>
+    <title>供應商管理系統 | Bespoke Mall</title>
     <style>
         :root { 
             --primary: #7f8c8d;
@@ -12,55 +12,167 @@
             --success: #e8aeb7;
             --text: #5d5d5d;
             --white: #ffffff;
+            --border: #f2e1e4;
         }
         
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: var(--text); }
-        .container { max-width: 900px; margin: 20px auto; background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); box-sizing: border-box; }
-        .header-logo { width: 90px; margin-bottom: 15px; display: block; }
+        body { 
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
+            background-color: var(--bg); 
+            margin: 0; 
+            padding: 15px; 
+            color: var(--text); 
+            line-height: 1.6;
+        }
         
-        /* 登入樣式 */
-        #login-section { text-align: center; padding: 30px 0; }
+        .container { 
+            max-width: 900px; 
+            margin: 20px auto; 
+            background: var(--white); 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05); 
+            box-sizing: border-box; 
+        }
+
+        .header-logo { width: 100px; margin-bottom: 20px; display: block; }
+        
+        /* 登入區塊 */
+        #login-section { text-align: center; padding: 40px 0; }
         .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
         .login-box label { font-size: 13px; color: #888; margin-bottom: 5px; display: block; font-weight: bold; }
+        .login-box input { width: 100%; margin-bottom: 20px; border: 1px solid var(--border); }
         
-        /* 控制面板 */
-        #control-panel { display: none; background: #fef9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f2e1e4; box-sizing: border-box; }
-        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
+        /* 控制面板 (搜尋與按鈕) */
+        #control-panel { 
+            display: none; 
+            background: #fef9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-bottom: 25px; 
+            border: 1px solid var(--border); 
+            box-sizing: border-box; 
+        }
+        .filter-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 15px; 
+            margin-top: 10px; 
+        }
         
-        input, button, select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; }
-        button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
-        .btn-reload { background: var(--success); color: white; }
+        input, button, select { 
+            padding: 12px; 
+            border-radius: 6px; 
+            border: 1px solid #ddd; 
+            font-size: 14px; 
+            box-sizing: border-box; 
+            outline: none;
+        }
+
+        button { 
+            background: var(--primary); 
+            color: white; 
+            cursor: pointer; 
+            border: none; 
+            font-weight: bold; 
+            transition: background 0.3s; 
+        }
+        button:hover { opacity: 0.9; }
+        .btn-reload { background: var(--success); }
         .btn-logout { background: #bdc3c7; }
 
-        /* 狀態切換按鈕組 */
+        /* 狀態切換按鈕 (核心佈局) */
         .status-toggle-wrapper { margin-bottom: 15px; display: flex; justify-content: center; }
-        .status-toggle-group { display: flex; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; width: 100%; max-width: 400px; }
-        .status-toggle-group button { flex: 1; background: white; color: var(--primary); padding: 10px; border-radius: 0; font-size: 14px; border-right: 1px solid var(--accent); }
+        .status-toggle-group { 
+            display: flex; 
+            border: 1px solid var(--accent); 
+            border-radius: 6px; 
+            overflow: hidden; 
+            width: 100%; 
+            max-width: 450px; 
+        }
+        .status-toggle-group button { 
+            flex: 1; 
+            background: white; 
+            color: var(--primary); 
+            padding: 12px; 
+            border-radius: 0; 
+            font-size: 14px; 
+            border-right: 1px solid var(--accent);
+        }
         .status-toggle-group button:last-child { border-right: none; }
         .status-toggle-group button.active { background: var(--success); color: white; }
 
-        /* 排序與計數列 */
-        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--accent); }
-        .sort-controls { display: flex; align-items: center; gap: 8px; }
-        .order-toggle { background: #fff; color: var(--primary); border: 1px solid var(--accent); display: flex; overflow: hidden; border-radius: 6px; }
-        .order-toggle span { padding: 8px 12px; cursor: pointer; font-size: 13px; }
+        /* 排序與顯示狀態 */
+        .status-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            padding-bottom: 10px; 
+            border-bottom: 1px dashed var(--accent); 
+        }
+        .sort-controls { display: flex; align-items: center; gap: 10px; }
+        .order-toggle { 
+            background: #fff; 
+            color: var(--primary); 
+            border: 1px solid var(--accent); 
+            display: flex; 
+            border-radius: 6px; 
+            overflow: hidden;
+        }
+        .order-toggle span { padding: 8px 15px; cursor: pointer; font-size: 13px; transition: 0.2s; }
         .order-toggle span.active { background: var(--success); color: white; }
 
-        /* 訂單卡片 */
-        .order-card { background: #fff; border: 1px solid #f2e1e4; border-radius: 8px; margin-bottom: 15px; padding: 18px; border-left: 4px solid var(--accent); position: relative; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
-        .label { font-size: 11px; color: #a1a1a1; font-weight: bold; margin-bottom: 4px; display: block; }
-        .val { font-size: 14px; color: var(--text); margin-bottom: 12px; line-height: 1.5; }
-        .ship-time-tag { font-size: 11px; color: #e8aeb7; margin-top: 5px; font-style: italic; display: block; font-weight: bold; }
+        /* 訂單卡片設計 */
+        .order-card { 
+            background: #fff; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+            padding: 20px; 
+            border-left: 5px solid var(--accent); 
+            position: relative; 
+            transition: transform 0.2s;
+        }
+        .info-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 15px; }
+        .label { font-size: 11px; color: #aaa; font-weight: bold; margin-bottom: 3px; display: block; text-transform: uppercase; }
+        .val { font-size: 14px; color: var(--text); margin-bottom: 12px; word-break: break-all; }
         
-        .btn-ship { background: #e8aeb7; color: white; padding: 10px; width: 100%; border-radius: 6px; margin-top: 10px; border: none; font-size: 13px; }
-        .btn-ship.shipped { background: #bdc3c7; cursor: not-allowed; opacity: 0.7; }
+        .ship-time-tag { 
+            font-size: 12px; 
+            color: var(--success); 
+            margin: 5px 0 10px 0; 
+            font-style: italic; 
+            display: block; 
+            font-weight: bold; 
+        }
 
-        .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 5px; }
+        .btn-ship { 
+            background: var(--success); 
+            color: white; 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 6px; 
+            margin-top: 5px; 
+            font-size: 14px; 
+            letter-spacing: 1px;
+        }
+        .btn-ship.shipped { background: #d5dadd; color: #7f8c8d; cursor: not-allowed; }
+
+        /* 動態效果 */
+        .loading-spin { 
+            display: inline-block; width: 14px; height: 14px; 
+            border: 2px solid rgba(255,255,255,.3); 
+            border-radius: 50%; border-top-color: #fff; 
+            animation: spin 1s linear infinite; margin-right: 8px; 
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 600px) {
-            .info-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .container { padding: 15px; margin: 0; border-radius: 0; }
+            .info-grid { grid-template-columns: 1fr; gap: 0; }
             .status-bar { flex-direction: column; align-items: flex-start; }
             .sort-controls { width: 100%; justify-content: space-between; }
         }
@@ -73,53 +185,55 @@
 
     <!-- 登入介面 -->
     <div id="login-section">
-        <h2>供應商管理系統</h2>
+        <h2 style="color:var(--primary); margin-bottom:30px;">供應商管理系統</h2>
         <div class="login-box">
-            <label>Email :</label>
-            <input type="email" id="supplierEmail" placeholder="請輸入登記之電子郵件" style="width:100%; margin-bottom:15px;">
-            <label>識別碼 :</label>
-            <input type="password" id="supplierKey" placeholder="請輸入供應商識別碼" style="width:100%; margin-bottom:20px;">
-            <button id="loginBtn" onclick="doLogin()" style="width:100%;">登入</button>
-            <p id="login-msg" style="color:#e8aeb7; font-size:14px; display:none; margin-top:15px; text-align:center;">登入失敗：Email 或識別碼錯誤</p>
+            <label>電子郵件 (Email) :</label>
+            <input type="email" id="supplierEmail" placeholder="example@mail.com">
+            
+            <label>供應商識別碼 :</label>
+            <input type="password" id="supplierKey" placeholder="請輸入識別碼">
+            
+            <button id="loginBtn" onclick="doLogin()" style="width:100%; font-size:16px;">登入系統</button>
+            <p id="login-msg" style="color:#e81e63; font-size:14px; display:none; margin-top:15px; text-align:center; font-weight:bold;">驗證失敗，請檢查輸入資料</p>
         </div>
     </div>
 
-    <!-- 搜尋控制台 -->
+    <!-- 搜尋與過濾面板 -->
     <div id="control-panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-            <h4>訂單篩選 <span id="staff-badge" style="display:none; font-size:10px; background:var(--primary); color:white; padding:2px 6px; border-radius:10px; margin-left:5px;">管理員</span></h4>
-            <div style="display:flex; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+            <h3 style="margin:0; color:var(--primary);">訂單搜尋</h3>
+            <div style="display:flex; gap:10px;">
                 <button class="btn-reload" id="reloadBtn" onclick="reloadData()">更新資料</button>
                 <button class="btn-logout" onclick="location.reload()">登出</button>
             </div>
         </div>
         <div class="filter-grid">
-            <div><span class="label">日期 (起)</span><input type="date" id="filter-start" onchange="applyFilters()"></div>
-            <div><span class="label">日期 (迄)</span><input type="date" id="filter-end" onchange="applyFilters()"></div>
-            <div><span class="label">姓名</span><input type="text" id="filter-name" placeholder="搜尋姓名..." oninput="applyFilters()"></div>
-            <div><span class="label">單號</span><input type="text" id="filter-id" placeholder="搜尋單號..." oninput="applyFilters()"></div>
+            <div><span class="label">日期 (從)</span><input type="date" id="filter-start" onchange="applyFilters()" style="width:100%;"></div>
+            <div><span class="label">日期 (至)</span><input type="date" id="filter-end" onchange="applyFilters()" style="width:100%;"></div>
+            <div><span class="label">客戶姓名</span><input type="text" id="filter-name" placeholder="輸入關鍵字..." oninput="applyFilters()" style="width:100%;"></div>
+            <div><span class="label">訂單單號</span><input type="text" id="filter-id" placeholder="輸入單號..." oninput="applyFilters()" style="width:100%;"></div>
         </div>
     </div>
 
-    <!-- 列表顯示區 -->
+    <!-- 列表主體區 -->
     <div id="display-section" style="display:none;">
         
-        <!-- 1. 狀態篩選按鈕 (最上方) -->
+        <!-- 核心切換按鈕：位於最上方 -->
         <div class="status-toggle-wrapper">
             <div class="status-toggle-group">
                 <button id="tab-unshipped" class="active" onclick="setStatusFilter('unshipped')">未出貨</button>
                 <button id="tab-shipped" onclick="setStatusFilter('shipped')">已出貨</button>
-                <button id="tab-all" onclick="setStatusFilter('all')">全部</button>
+                <button id="tab-all" onclick="setStatusFilter('all')">全部訂單</button>
             </div>
         </div>
 
-        <!-- 2. 排序與計數 -->
-        <div id="result-header" class="status-bar">
-            <div id="status-msg" style="font-size:14px; color:#999; font-weight:bold;"></div>
+        <!-- 狀態與排序控制 -->
+        <div class="status-bar">
+            <div id="status-msg" style="font-weight:bold; color:var(--primary);"></div>
             <div class="sort-controls">
                 <select id="sortField" onchange="handleSort()">
-                    <option value="id" selected>單號排序</option>
-                    <option value="date">送貨日期</option>
+                    <option value="id">按單號排序</option>
+                    <option value="date" selected>按送貨日期</option>
                 </select>
                 <div class="order-toggle">
                     <span id="order-asc" onclick="setSortOrder('asc')">升序</span>
@@ -133,13 +247,15 @@
 </div>
 
 <script>
+    // 配置資訊 - 請確保 GAS 網址正確
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzA3WeU5uFcAmhUdM-mSQIPLGvD8aBx1SiMOPzccD8kPPdO2nososJccmB57ras_BXq/exec';
     
-    let allSupplierData = [];
+    let allData = [];
     let currentKey = "", currentEmail = "";
-    let isStaff = false, filteredData = [], currentSortOrder = 'desc', currentStatusTab = 'unshipped';
+    let isStaff = false, filteredData = [], sortOrder = 'desc', currentTab = 'unshipped';
 
+    // 登入邏輯
     async function doLogin() {
         currentEmail = document.getElementById('supplierEmail').value.trim();
         currentKey = document.getElementById('supplierKey').value.trim();
@@ -147,160 +263,177 @@
 
         const btn = document.getElementById('loginBtn');
         btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spin"></span>';
+        btn.innerHTML = '<span class="loading-spin"></span>驗證中...';
         
+        // 管理員特殊判斷
         isStaff = (currentKey.toUpperCase() === "BESPOKE01" && currentEmail.toLowerCase() === "support@bespoke-mall.com");
         
-        if (await loadDataFromServer()) {
+        if (await loadData()) {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('control-panel').style.display = "block";
             document.getElementById('display-section').style.display = "block";
-            if(isStaff) document.getElementById('staff-badge').style.display = "inline-block";
-            
-            // 取消日期預設
-            document.getElementById('filter-start').value = "";
             applyFilters();
         } else {
             document.getElementById('login-msg').style.display = "block";
-            btn.disabled = false; btn.innerText = "登入";
+            btn.disabled = false; btn.innerText = "登入系統";
         }
     }
 
-    async function loadDataFromServer() {
+    // 從 Google Sheets 抓取資料
+    async function loadData() {
         try {
-            const resp = await fetch(SHEET_CSV + '&t=' + Date.now());
+            const resp = await fetch(`${SHEET_CSV}&t=${Date.now()}`);
             const text = await resp.text();
-            // 簡易 CSV 解析
+            // 解析 CSV (處理引號與空格)
             const rows = text.split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
             
             if (isStaff) {
-                allSupplierData = rows.slice(1).filter(r => r[3]); 
+                allData = rows.slice(1).filter(r => r[3]); // 管理員看全部有單號的
             } else {
-                allSupplierData = rows.filter(r => 
+                allData = rows.filter(r => 
                     r[2]?.toLowerCase() === currentKey.toLowerCase() && 
                     r[12]?.toLowerCase() === currentEmail.toLowerCase()
                 );
             }
-            return allSupplierData.length > 0;
+            return allData.length > 0;
         } catch (e) { return false; }
     }
 
+    // 狀態標籤切換
     function setStatusFilter(status) {
-        currentStatusTab = status;
-        document.querySelectorAll('.status-toggle-group button').forEach(btn => btn.classList.remove('active'));
+        currentTab = status;
+        document.querySelectorAll('.status-toggle-group button').forEach(b => b.classList.remove('active'));
         document.getElementById(`tab-${status}`).classList.add('active');
         applyFilters();
     }
 
+    // 綜合篩選邏輯
     function applyFilters() {
-        const s = document.getElementById('filter-start').value;
-        const e = document.getElementById('filter-end').value;
-        const nk = document.getElementById('filter-name').value.toLowerCase();
-        const ik = document.getElementById('filter-id').value.toLowerCase();
+        const start = document.getElementById('filter-start').value;
+        const end = document.getElementById('filter-end').value;
+        const nameKey = document.getElementById('filter-name').value.toLowerCase();
+        const idKey = document.getElementById('filter-id').value.toLowerCase();
         
-        filteredData = allSupplierData.filter(r => {
-            // 1. 狀態篩選 (預設顯示未出貨)
-            const shipStatus = (r[9] || "").trim();
-            if (currentStatusTab === 'unshipped' && shipStatus === '已出貨') return false;
-            if (currentStatusTab === 'shipped' && shipStatus !== '已出貨') return false;
+        filteredData = allData.filter(r => {
+            // 1. 狀態標籤過濾
+            const status = (r[9] || "").trim();
+            if (currentTab === 'unshipped' && status === '已出貨') return false;
+            if (currentTab === 'shipped' && status !== '已出貨') return false;
 
-            // 2. 關鍵字篩選
-            return (r[4]||"").toLowerCase().includes(nk) && (r[3]||"").toLowerCase().includes(ik);
+            // 2. 關鍵字過濾 (姓名與單號)
+            const matchName = (r[4] || "").toLowerCase().includes(nameKey);
+            const matchId = (r[3] || "").toLowerCase().includes(idKey);
+            
+            // 3. 日期範圍過濾
+            let matchDate = true;
+            if (start || end) {
+                const targetDate = new Date(r[5]).getTime();
+                if (start && targetDate < new Date(start).getTime()) matchDate = false;
+                if (end && targetDate > new Date(end).getTime()) matchDate = false;
+            }
+
+            return matchName && matchId && matchDate;
         });
         handleSort();
     }
 
+    // 排序處理
     function handleSort() {
         const field = document.getElementById('sortField').value;
         filteredData.sort((a, b) => {
             const valA = a[field === 'id' ? 3 : 5] || "";
             const valB = b[field === 'id' ? 3 : 5] || "";
-            return currentSortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
         });
-        renderList(filteredData);
+        renderUI();
     }
 
     function setSortOrder(order) {
-        currentSortOrder = order;
+        sortOrder = order;
         document.getElementById('order-asc').classList.toggle('active', order === 'asc');
         document.getElementById('order-desc').classList.toggle('active', order === 'desc');
         handleSort();
     }
 
-    function renderList(data) {
-        const area = document.getElementById('result-list');
-        area.innerHTML = "";
-        document.getElementById('status-msg').innerText = `找到 ${data.length} 筆訂單`;
+    // 渲染清單
+    function renderUI() {
+        const container = document.getElementById('result-list');
+        container.innerHTML = "";
+        document.getElementById('status-msg').innerText = `共 ${filteredData.length} 筆項目`;
         
-        data.forEach(r => {
-            const isShipped = (r[9] === "已出貨");
-            const shipTime = r[10] || ""; // 獲取 K 欄的時間記錄
+        filteredData.forEach(r => {
+            const isDone = (r[9] === "已出貨");
+            const doneTime = r[10] || ""; 
             
             const card = document.createElement('div');
             card.className = 'order-card';
             card.innerHTML = `
                 <div class="info-grid">
                     <div>
-                        <span class="label">客人姓名</span><div class="val">${r[4] || '-'}</div>
-                        <span class="label">產品數量</span><div class="val" style="font-weight:bold;">${r[7] || '-'}</div>
+                        <span class="label">客戶姓名</span><div class="val" style="font-weight:bold;">${r[4] || '-'}</div>
+                        <span class="label">產品內容</span><div class="val">${r[7] || '-'}</div>
+                        <span class="label">備註</span><div class="val" style="color:#e8aeb7;">${r[8] || '-'}</div>
                     </div>
                     <div>
-                        <span class="label">單號</span><div class="val" style="color:var(--primary); font-weight:bold;">${r[3] || '-'}</div>
+                        <span class="label">訂單單號</span><div class="val" style="color:var(--primary); font-weight:bold;">#${r[3] || '-'}</div>
                         <span class="label">送貨日期</span><div class="val" style="font-weight:bold;">${r[5] || '-'}</div>
+                        <span class="label">送貨地址</span><div class="val" style="font-size:12px;">${r[6] || '-'}</div>
                     </div>
                 </div>
-                <div id="ship-info-${r[3]}">
-                    ${isShipped ? `<span class="ship-time-tag">出貨時間：${shipTime}</span>` : ''}
+                <div id="box-${r[3]}">
+                    ${isDone ? `<span class="ship-time-tag">✓ 已於 ${doneTime} 回報出貨</span>` : ''}
                 </div>
-                <button id="btn-${r[3]}" class="btn-ship ${isShipped ? 'shipped' : ''}" 
-                        onclick="updateShipStatus('${r[3]}')" ${isShipped ? 'disabled' : ''}>
-                    ${isShipped ? '已回報出貨' : '確認已出貨'}
+                <button id="btn-${r[3]}" class="btn-ship ${isDone ? 'shipped' : ''}" 
+                        onclick="confirmShip('${r[3]}')" ${isDone ? 'disabled' : ''}>
+                    ${isDone ? '已成功同步至系統' : '確認已出貨'}
                 </button>
             `;
-            area.appendChild(card);
+            container.appendChild(card);
         });
     }
 
-    async function updateShipStatus(orderId) {
-        if (!confirm('確認將單號 ' + orderId + ' 標註為「已出貨」並同步至系統？')) return;
+    // 核心功能：確認出貨並同步
+    async function confirmShip(orderId) {
+        if (!confirm(`確定將單號 #${orderId} 標註為已出貨嗎？\n此動作將立即同步至系統。`)) return;
         
         const btn = document.getElementById(`btn-${orderId}`);
-        const infoDiv = document.getElementById(`ship-info-${orderId}`);
+        const box = document.getElementById(`box-${orderId}`);
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span>同步中...';
         
-        // 取得本地當前時間 (立即顯示用)
+        // 生成即時時間戳記 (本地顯示用)
         const now = new Date();
-        const timestamp = now.getFullYear() + "/" + (now.getMonth()+1).toString().padStart(2, '0') + "/" + now.getDate().toString().padStart(2, '0') + " " + now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0') + ":" + now.getSeconds().toString().padStart(2, '0');
+        const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
 
         try {
-            // 發送至 GAS 進行立即同步
+            // 向 GAS 發送 POST 請求
             await fetch(GAS_URL, { 
                 method: 'POST', 
                 mode: 'no-cors', 
                 body: JSON.stringify({ orderId: orderId }) 
             });
             
-            // UI 立即反饋
-            btn.innerText = "已回報出貨";
+            // 立即更新 UI (不需重整)
+            btn.innerText = "已成功同步至系統";
             btn.classList.add('shipped');
-            infoDiv.innerHTML = `<span class="ship-time-tag">出貨時間：${timestamp} (已同步)</span>`;
+            box.innerHTML = `<span class="ship-time-tag">✓ 已於 ${timeStr} 回報出貨 (即時更新)</span>`;
             
-            // 同步更新本地數據
-            const target = allSupplierData.find(r => r[3] === orderId);
-            if (target) { target[9] = "已出貨"; target[10] = timestamp; }
+            // 更新本地暫存數據，保持搜尋結果一致性
+            const target = allData.find(r => r[3] === orderId);
+            if (target) { target[9] = "已出貨"; target[10] = timeStr; }
             
         } catch (e) { 
-            alert('同步失敗，請檢查網路連線'); 
+            alert('同步失敗，請檢查網路連線後再試'); 
             btn.disabled = false; 
             btn.innerText = "確認已出貨";
         }
     }
     
+    // 重新整理資料
     async function reloadData() {
         const btn = document.getElementById('reloadBtn');
-        btn.innerHTML = '<span class="loading-spin"></span>';
-        await loadDataFromServer();
+        btn.innerHTML = '<span class="loading-spin"></span>讀取中';
+        await loadData();
         applyFilters();
         btn.innerText = "更新資料";
     }
