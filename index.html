@@ -241,7 +241,7 @@
                 </div>
                 ${isDone ? `<span class="ship-time">✓ 同步時間：${r[10] || ''}</span>` : ''}
                 <button id="btn-${r[3]}" class="btn-ship ${isDone ? 'shipped' : ''}" onclick="confirmShip('${r[3]}')" ${isDone ? 'disabled' : ''}>
-                    ${isDone ? '出貨同步完成' : '確認已出貨'}
+                    ${isDone ? '已完成出貨' : '確認已出貨'}
                 </button>
             `;
             container.appendChild(card);
