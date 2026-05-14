@@ -5,46 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>供應商管理系統 | Bespoke Mall</title>
     <style>
-        /* 品牌顏色與字體統一：字體大小 14px，移除紅字 */
+        /* 統一字體與顏色設定（移除紅字，字體統一為 14px） */
         :root { --primary: #7f8c8d; --accent: #f8d7da; --bg: #fdf2f4; --success: #e8aeb7; --text: #4a4a4a; --white: #ffffff; --border: #f2e1e4; }
         
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: var(--text); line-height: 1.6; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: var(--text); line-height: 1.6; font-size: 14px; }
         .container { max-width: 900px; margin: 20px auto; background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); box-sizing: border-box; }
         .header-logo { width: 120px; margin: 0 auto 25px; display: block; }
         
         /* 登入視窗 */
         #login-section { text-align: center; padding: 40px 0; }
         .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
-        .login-box label { font-size: 13px; color: #888; margin-bottom: 5px; display: block; font-weight: bold; }
-        .login-box input { width: 100%; margin-bottom: 20px; border: 1px solid var(--border); padding: 12px; border-radius: 6px; box-sizing: border-box; }
+        .login-box input { width: 100%; margin-bottom: 20px; border: 1px solid var(--border); padding: 12px; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         
         /* 管理面板 */
         #control-panel { display: none; background: #fffcfd; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border); }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
         input, button, select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; outline: none; }
         
-        /* 頁籤切換 */
+        /* 頁籤與排序工具列 */
         .status-toggle-group { display: flex; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
         .status-toggle-group button { flex: 1; background: white; color: var(--primary); border: none; border-right: 1px solid var(--accent); padding: 14px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .status-toggle-group button.active { background: var(--success); color: white; }
 
-        /* 排序與工具列 */
         .toolbar { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; flex-wrap: wrap; gap: 10px; border-top: 1px dashed var(--accent); padding-top: 15px; }
         .sort-group { display: flex; align-items: center; gap: 8px; }
         .order-toggle { border: 1px solid var(--accent); display: flex; border-radius: 6px; overflow: hidden; background: white; }
         .order-toggle span { padding: 8px 12px; cursor: pointer; font-size: 13px; font-weight: bold; }
         .order-toggle span.active { background: var(--success); color: white; }
 
-        /* 訂單卡片：字體大小統一 14px */
+        /* 訂單卡片 */
         .order-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; padding: 20px; border-left: 6px solid var(--accent); }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .label { font-size: 11px; color: #aaa; font-weight: bold; display: block; margin-bottom: 3px; }
         
-        /* 內容自動換行設定 */
         .val { font-size: 14px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-all; line-height: 1.5; color: var(--text); }
         .val-product { background: #fdf9f9; padding: 12px; border-radius: 6px; border: 1px solid #f2e1e4; }
 
-        /* 按鈕與標籤：移除紅字顏色 */
         .btn-ship { background: var(--success); color: white; width: 100%; padding: 14px; border-radius: 8px; margin-top: 10px; font-size: 14px; border: none; font-weight: bold; cursor: pointer; }
         .btn-ship.shipped { background: #dcdde1; color: #7f8c8d; cursor: not-allowed; }
         .ship-time { font-size: 13px; color: var(--success); font-weight: bold; margin-top: 5px; display: block; }
@@ -63,11 +59,9 @@
     <div id="login-section">
         <h2 style="color:var(--primary); margin-bottom:30px;">供應商管理系統</h2>
         <div class="login-box">
-            <label>電子郵件 (Email) :</label>
-            <input type="email" id="supplierEmail" placeholder="請輸入 Email">
-            <label>供應商識別碼 :</label>
-            <input type="password" id="supplierKey" placeholder="請輸入識別碼">
-            <button onclick="doLogin()" id="loginBtn" style="width:100%; background:var(--primary); color:white; padding:12px; border-radius:6px; border:none; font-weight:bold; cursor:pointer; font-size:14px;">登入系統</button>
+            <input type="email" id="supplierEmail" placeholder="電子郵件 (Email)">
+            <input type="password" id="supplierKey" placeholder="供應商識別碼">
+            <button onclick="doLogin()" id="loginBtn" style="width:100%; background:var(--primary); color:white; font-weight:bold;">登入系統</button>
             <p id="login-msg" style="color:var(--primary); display:none; margin-top:15px; font-weight:bold; text-align:center;">驗證失敗，請檢查資料</p>
         </div>
     </div>
@@ -76,8 +70,8 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h3 style="margin:0; color:var(--primary);">訂單查詢與出貨回報</h3>
             <div style="display:flex; gap:10px;">
-                <button onclick="reloadData()" style="background:var(--success); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">更新資料</button>
-                <button onclick="location.reload()" style="background:#bdc3c7; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">登出</button>
+                <button onclick="reloadData()" style="background:var(--success); color:white; border:none; padding:8px 15px; border-radius:5px;">更新資料</button>
+                <button onclick="location.reload()" style="background:#bdc3c7; color:white; border:none; padding:8px 15px; border-radius:5px;">登出</button>
             </div>
         </div>
         <div class="filter-grid">
@@ -96,12 +90,12 @@
         </div>
 
         <div class="toolbar">
-            <div id="count-info" style="font-weight:bold; color:var(--primary); font-size:14px;"></div>
+            <div id="count-info" style="font-weight:bold; color:var(--primary);"></div>
             <div class="sort-group">
                 <select id="sortField" onchange="applyFilters()">
-                    <option value="5">按日期排序</option>
+                    <option value="5">按送貨日期</option>
+                    <option value="1">按下單日期</option>
                     <option value="3">按單號排序</option>
-                    <option value="4">按姓名排序</option>
                 </select>
                 <div class="order-toggle">
                     <span id="order-asc" onclick="setSortOrder('asc')">升序</span>
@@ -248,7 +242,7 @@
     }
 
     async function confirmShip(orderId) {
-        if (!confirm(`確認訂單 #${orderId} 出貨？`)) return;
+        if (!confirm(`確認單號 #${orderId} 出貨？`)) return;
         const btn = document.getElementById(`btn-${orderId}`);
         btn.disabled = true; btn.innerHTML = '<span class="loading-spin"></span>同步中...';
         try {
