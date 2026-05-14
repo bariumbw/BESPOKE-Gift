@@ -32,7 +32,6 @@
         .btn-reload { background: var(--success); color: white; }
         .btn-logout { background: #bdc3c7; }
 
-        /* 已出貨按鈕樣式 */
         .btn-ship { 
             background: #e8aeb7; 
             color: white; 
@@ -65,12 +64,10 @@
         .loading-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 5px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* 手機版適配 */
         @media (max-width: 600px) {
             body { padding: 8px; }
             .container { padding: 12px; margin: 5px auto; overflow: hidden; }
             #control-panel h4 { width: 100%; text-align: left; margin-bottom: 10px; }
-            /* 調整日期選擇器：寬度更小、不貼近 */
             .filter-grid { grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
             .filter-grid input { font-size: 11px; padding: 4px 2px; border: 1px solid #eee; width: 100%; height: 32px; }
             .order-card { padding: 15px; }
@@ -262,7 +259,6 @@
         area.innerHTML = "";
         document.getElementById('status-msg').innerText = `已找到 ${data.length} 筆訂單`;
         data.forEach(r => {
-            // 讀取第 10 欄 (Index 9) 的狀態
             const isShipped = (r[9] && r[9].trim() === "已出貨");
             const card = document.createElement('div');
             card.className = 'order-card';
@@ -283,7 +279,7 @@
                 </div>
                 <button id="btn-${r[3]}" class="btn-ship ${isShipped ? 'shipped' : ''}" 
                         onclick="updateShipStatus('${r[3]}')" ${isShipped ? 'disabled' : ''}>
-                    ${isShipped ? '已回報出貨' : '確認已出貨 (通知後端)'}
+                    ${isShipped ? '已回報出貨' : '確認已出貨'}
                 </button>
             `;
             area.appendChild(card);
@@ -307,7 +303,7 @@
             
             btn.innerText = "已回報出貨";
             btn.classList.add('shipped');
-            alert('系統已更新！請稍候再查看 Google Sheet 確認。');
+            alert('系統已更新！可於5分鐘後點擊更新資料重新載入資料確認');
         } catch (error) {
             alert('連線失敗，請重試');
             btn.disabled = false;
