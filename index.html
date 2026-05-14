@@ -10,42 +10,41 @@
         .container { max-width: 900px; margin: 20px auto; background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); box-sizing: border-box; }
         .header-logo { width: 120px; margin: 0 auto 25px; display: block; }
         
-        /* 登入區塊 */
+        /* 登入視窗 */
         #login-section { text-align: center; padding: 40px 0; }
         .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
         .login-box label { font-size: 13px; color: #888; margin-bottom: 5px; display: block; font-weight: bold; }
         .login-box input { width: 100%; margin-bottom: 20px; border: 1px solid var(--border); padding: 12px; border-radius: 6px; box-sizing: border-box; }
         
-        /* 管理面板 */
+        /* 管理面板 (包含日期選擇) */
         #control-panel { display: none; background: #fffcfd; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border); }
-        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 10px; }
-        input, button { padding: 12px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; }
-        button { background: var(--primary); color: white; cursor: pointer; border: none; font-weight: bold; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
+        input, button, select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; outline: none; }
         
+        /* 排序與計數工具列 */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; flex-wrap: wrap; gap: 10px; border-top: 1px dashed var(--accent); padding-top: 15px; }
+        .sort-group { display: flex; align-items: center; gap: 8px; }
+        .order-toggle { border: 1px solid var(--accent); display: flex; border-radius: 6px; overflow: hidden; background: white; }
+        .order-toggle span { padding: 8px 12px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .order-toggle span.active { background: var(--success); color: white; }
+
         /* 頁籤切換 */
-        .status-toggle-group { display: flex; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
-        .status-toggle-group button { flex: 1; background: white; color: var(--primary); border-radius: 0; border-right: 1px solid var(--accent); }
+        .status-toggle-group { display: flex; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; margin-bottom: 5px; }
+        .status-toggle-group button { flex: 1; background: white; color: var(--primary); border: none; border-right: 1px solid var(--accent); padding: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .status-toggle-group button.active { background: var(--success); color: white; }
 
-        /* 訂單卡片核心樣式 */
-        .order-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 15px; padding: 20px; border-left: 6px solid var(--accent); }
+        /* 訂單卡片設計 */
+        .order-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; padding: 20px; border-left: 6px solid var(--accent); position: relative; }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .label { font-size: 11px; color: #aaa; font-weight: bold; display: block; margin-bottom: 3px; }
         
-        /* 關鍵修正：確保內容自動換行 */
-        .val { 
-            font-size: 14px; 
-            color: var(--text); 
-            margin-bottom: 12px; 
-            white-space: pre-wrap; /* 讓 Google Sheet 的換行生效 */
-            word-break: break-all;
-            line-height: 1.5;
-        }
+        /* 重要：內容自動換行顯示 */
+        .val { font-size: 14px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-all; line-height: 1.5; }
         .val-product { background: #fdf9f9; padding: 12px; border-radius: 6px; border: 1px solid #f2e1e4; color: #2c3e50; font-weight: 500; }
 
-        .btn-ship { background: var(--success); color: white; width: 100%; padding: 14px; border-radius: 8px; margin-top: 10px; font-size: 15px; }
+        .btn-ship { background: var(--success); color: white; width: 100%; padding: 14px; border-radius: 8px; margin-top: 10px; font-size: 15px; border: none; font-weight: bold; cursor: pointer; transition: background 0.3s; }
         .btn-ship.shipped { background: #dcdde1; color: #7f8c8d; cursor: not-allowed; }
-        .ship-time { font-size: 12px; color: var(--success); font-weight: bold; margin: 5px 0 10px 0; display: block; }
+        .ship-time { font-size: 12px; color: var(--success); font-weight: bold; margin-top: 5px; display: block; }
         
         .loading-spin { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -58,55 +57,70 @@
 <div class="container">
     <img src="https://www.bespoke-mall.com/pub/media/webp_image/logo/stores/1/BespokeMallv4.webp" alt="LOGO" class="header-logo">
 
-    <!-- 登入介面 -->
     <div id="login-section">
         <h2 style="color:var(--primary); margin-bottom:30px;">供應商管理系統</h2>
         <div class="login-box">
             <label>電子郵件 (Email) :</label>
-            <input type="email" id="supplierEmail" placeholder="請輸入 Email">
+            <input type="email" id="supplierEmail" placeholder="請輸入登入 Email">
             <label>供應商識別碼 :</label>
             <input type="password" id="supplierKey" placeholder="請輸入識別碼">
-            <button id="loginBtn" onclick="doLogin()" style="width:100%;">登入系統</button>
-            <p id="login-msg" style="color:#e81e63; font-size:14px; display:none; margin-top:15px; text-align:center; font-weight:bold;">驗證失敗，請檢查輸入資料</p>
+            <button onclick="doLogin()" id="loginBtn" style="width:100%; background:var(--primary); color:white; padding:12px; border-radius:6px; border:none; font-weight:bold; cursor:pointer;">登入系統代碼</button>
+            <p id="login-msg" style="color:#e81e63; display:none; margin-top:15px; font-weight:bold; text-align:center;">驗證失敗，請檢查 Email 或識別碼</p>
         </div>
     </div>
 
-    <!-- 管理功能區 -->
     <div id="control-panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 style="margin:0; color:var(--primary);">訂單查詢</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="margin:0; color:var(--primary);">訂單查詢與出貨回報</h3>
             <div style="display:flex; gap:10px;">
-                <button onclick="reloadData()" style="background:var(--success);">更新資料</button>
-                <button onclick="location.reload()" style="background:#bdc3c7;">登出</button>
+                <button onclick="reloadData()" style="background:var(--success); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">更新資料</button>
+                <button onclick="location.reload()" style="background:#bdc3c7; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">登出</button>
             </div>
         </div>
         <div class="filter-grid">
+            <div><span class="label">日期 (從)</span><input type="date" id="filter-start" onchange="applyFilters()" style="width:100%;"></div>
+            <div><span class="label">日期 (至)</span><input type="date" id="filter-end" onchange="applyFilters()" style="width:100%;"></div>
             <div><span class="label">客戶姓名</span><input type="text" id="filter-name" placeholder="搜尋姓名" oninput="applyFilters()" style="width:100%;"></div>
             <div><span class="label">訂單單號</span><input type="text" id="filter-id" placeholder="搜尋單號" oninput="applyFilters()" style="width:100%;"></div>
         </div>
     </div>
 
-    <!-- 列表顯示區 -->
     <div id="display-section" style="display:none;">
         <div class="status-toggle-group">
             <button id="tab-unshipped" class="active" onclick="setStatusFilter('unshipped')">未出貨</button>
             <button id="tab-shipped" onclick="setStatusFilter('shipped')">已出貨</button>
             <button id="tab-all" onclick="setStatusFilter('all')">全部</button>
         </div>
+
+        <div class="toolbar">
+            <div id="count-info" style="font-weight:bold; color:var(--primary); font-size:14px;"></div>
+            <div class="sort-group">
+                <span class="label" style="display:inline; margin-right:5px;">排序:</span>
+                <select id="sortField" onchange="applyFilters()">
+                    <option value="5">按送貨日期</option>
+                    <option value="3">按訂單單號</option>
+                    <option value="4">按客戶姓名</option>
+                </select>
+                <div class="order-toggle">
+                    <span id="order-asc" onclick="setSortOrder('asc')">升序</span>
+                    <span id="order-desc" class="active" onclick="setSortOrder('desc')">降序</span>
+                </div>
+            </div>
+        </div>
+        
         <div id="result-list"></div>
     </div>
 </div>
 
 <script>
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSy5sD3WWgYrJg9dqHPQgtDlD1iOdxDSWMaPoN6UEjfM89GCPT8JWHu-8qg8Likhw2DOSjnP0J6zOYK/pub?output=csv';
-    // 這裡是您提供的最新 GAS 網址
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzpldrJh7YjQwZ_AJG20EDNx5pP6iOLWcPlGVZrh0MgPL5wnGiQR3FETo32L9miI76Q/exec';
     
     let allData = [];
     let currentKey = "", currentEmail = "";
-    let isStaff = false, currentTab = 'unshipped';
+    let isStaff = false, currentTab = 'unshipped', sortOrder = 'desc';
 
-    // 強化版 CSV 解析：處理引號內的換行與逗號，防止位移
+    // 進階 CSV 解析，處理引號與逗號，防止位移
     function parseCSV(text) {
         const rows = [];
         let row = [], cell = "", inQuotes = false;
@@ -116,9 +130,7 @@
             else if (char === '"') { inQuotes = !inQuotes; }
             else if (char === ',' && !inQuotes) { row.push(cell.trim()); cell = ""; }
             else if ((char === '\n' || char === '\r') && !inQuotes) {
-                if (cell !== "" || row.length > 0) {
-                    row.push(cell.trim()); rows.push(row); row = []; cell = "";
-                }
+                if (cell !== "" || row.length > 0) { row.push(cell.trim()); rows.push(row); row = []; cell = ""; }
             } else { cell += char; }
         }
         if (cell !== "" || row.length > 0) { row.push(cell.trim()); rows.push(row); }
@@ -143,7 +155,7 @@
             applyFilters();
         } else {
             document.getElementById('login-msg').style.display = "block";
-            btn.disabled = false; btn.innerText = "登入系統";
+            btn.disabled = false; btn.innerText = "登入系統代碼";
         }
     }
 
@@ -152,15 +164,11 @@
             const resp = await fetch(`${SHEET_CSV}&t=${Date.now()}`);
             const text = await resp.text();
             const rows = parseCSV(text);
-            
-            if (isStaff) {
+            if (isStaff) { 
                 allData = rows.slice(1).filter(r => r[3]); 
-            } else {
-                // 篩選 C 欄 (識別碼) 與 M 欄 (Email)
-                allData = rows.filter(r => 
-                    r[2]?.toLowerCase() === currentKey.toLowerCase() && 
-                    r[12]?.toLowerCase() === currentEmail.toLowerCase()
-                );
+            } else { 
+                // 比對 C 欄(2) 與 M 欄(12)
+                allData = rows.filter(r => r[2]?.toLowerCase() === currentKey.toLowerCase() && r[12]?.toLowerCase() === currentEmail.toLowerCase()); 
             }
             return allData.length > 0;
         } catch (e) { return false; }
@@ -173,23 +181,46 @@
         applyFilters();
     }
 
+    function setSortOrder(order) {
+        sortOrder = order;
+        document.getElementById('order-asc').classList.toggle('active', order === 'asc');
+        document.getElementById('order-desc').classList.toggle('active', order === 'desc');
+        applyFilters();
+    }
+
     function applyFilters() {
+        const start = document.getElementById('filter-start').value;
+        const end = document.getElementById('filter-end').value;
         const nameKey = document.getElementById('filter-name').value.toLowerCase();
         const idKey = document.getElementById('filter-id').value.toLowerCase();
+        const sortField = parseInt(document.getElementById('sortField').value);
 
         let filtered = allData.filter(r => {
             const status = (r[9] || "").trim();
             if (currentTab === 'unshipped' && status === '已出貨') return false;
             if (currentTab === 'shipped' && status !== '已出貨') return false;
-            return (r[4] || "").toLowerCase().includes(nameKey) && (r[3] || "").toLowerCase().includes(idKey);
+            if (nameKey && !(r[4] || "").toLowerCase().includes(nameKey)) return false;
+            if (idKey && !(r[3] || "").toLowerCase().includes(idKey)) return false;
+            if (start || end) {
+                const d = new Date(r[5]).getTime();
+                if (start && d < new Date(start).getTime()) return false;
+                if (end && d > new Date(end).getTime()) return false;
+            }
+            return true;
         });
+
+        filtered.sort((a, b) => {
+            let valA = a[sortField] || "", valB = b[sortField] || "";
+            return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        });
+
         renderUI(filtered);
     }
 
     function renderUI(data) {
         const container = document.getElementById('result-list');
         container.innerHTML = "";
-        data.sort((a, b) => (b[5] || "").localeCompare(a[5] || ""));
+        document.getElementById('count-info').innerText = `共計: ${data.length} 筆訂單`;
 
         data.forEach(r => {
             const isDone = (r[9] === "已出貨");
@@ -200,9 +231,9 @@
                     <div>
                         <span class="label">客戶姓名</span>
                         <div class="val" style="font-weight:bold; font-size:16px;">${r[4] || '-'}</div>
-                        <span class="label">產品及數量</span>
+                        <span class="label">產品內容及數量</span>
                         <div class="val val-product">${r[7] || '-'}</div>
-                        <span class="label">備註</span>
+                        <span class="label">備註資訊</span>
                         <div class="val" style="color:#d63031; font-weight:bold;">${r[8] || '-'}</div>
                     </div>
                     <div>
@@ -214,10 +245,9 @@
                         <div class="val" style="font-size:12px;">${r[6] || '-'}</div>
                     </div>
                 </div>
-                ${isDone ? `<span class="ship-time">✓ 已回報：${r[10] || ''}</span>` : ''}
-                <button id="btn-${r[3]}" class="btn-ship ${isDone ? 'shipped' : ''}" 
-                        onclick="confirmShip('${r[3]}')" ${isDone ? 'disabled' : ''}>
-                    ${isDone ? 'Google Sheet 同步完成' : '確認已出貨'}
+                ${isDone ? `<span class="ship-time">✓ 系統已紀錄回報時間：${r[10] || ''}</span>` : ''}
+                <button id="btn-${r[3]}" class="btn-ship ${isDone ? 'shipped' : ''}" onclick="confirmShip('${r[3]}')" ${isDone ? 'disabled' : ''}>
+                    ${isDone ? '出貨同步完成' : '確認已出貨 (同步 Google Sheet)'}
                 </button>
             `;
             container.appendChild(card);
@@ -225,31 +255,32 @@
     }
 
     async function confirmShip(orderId) {
-        if (!confirm(`確認單號 #${orderId} 已完成出貨？`)) return;
+        if (!confirm(`確認訂單 #${orderId} 已完成出貨？\n這將會即時同步至 Google 試算表。`)) return;
         const btn = document.getElementById(`btn-${orderId}`);
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span>同步中...';
-        
         try {
-            // 使用 POST 方式傳送回 GAS
             await fetch(GAS_URL, { 
                 method: 'POST', 
                 mode: 'no-cors', 
                 body: JSON.stringify({ orderId: orderId }) 
             });
-            alert('回報成功！訂單已更新');
+            alert('回報成功！');
             await loadData();
             applyFilters();
         } catch (e) { 
-            alert('網路異常，請稍後再試'); 
+            alert('回報發生錯誤，請檢查網路連線'); 
             btn.disabled = false; 
-            btn.innerText = "確認已出貨"; 
+            btn.innerText = "確認已出貨 (同步 Google Sheet)";
         }
     }
 
     async function reloadData() {
+        const btn = document.querySelector('button[onclick="reloadData()"]');
+        btn.innerHTML = '<span class="loading-spin"></span>讀取中';
         await loadData();
         applyFilters();
+        btn.innerText = "更新資料";
     }
 </script>
 </body>
