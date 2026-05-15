@@ -9,11 +9,11 @@
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: var(--text); line-height: 1.6; font-size: 14px; }
         .container { max-width: 900px; margin: 20px auto; background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); box-sizing: border-box; }
         .header-logo { width: 120px; margin: 0 auto 25px; display: block; }
+        
         #control-panel { display: none; background: #fffcfd; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border); }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
         input, button, select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; outline: none; }
         
-        /* 按鈕視覺反饋 */
         .btn-refresh { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; min-width: 90px; height: 38px; display: flex; align-items: center; justify-content: center; }
         .btn-refresh:disabled { background: #bdc3c7; cursor: not-allowed; }
 
@@ -109,10 +109,17 @@
     let currentKey = "", currentEmail = "";
     let isStaff = false, currentTab = 'unshipped', sortOrder = 'desc';
 
-    // 日期解析穩定版：處理各種日期字串
+    /**
+     * 強大的日期解析器：處理「2026年8月1日」或「2026/08/01」
+     */
     function parseDateValue(str) {
         if (!str) return 0;
-        const d = new Date(str.replace(/\//g, '-'));
+        let cleanStr = str.toString().trim();
+        // 處理中文日期格式
+        if (cleanStr.includes('年')) {
+            cleanStr = cleanStr.replace('年', '-').replace('月', '-').replace('日', '');
+        }
+        const d = new Date(cleanStr);
         return isNaN(d.getTime()) ? 0 : d.getTime();
     }
 
@@ -189,24 +196,25 @@
             if (nameKey && !(r[4] || "").toLowerCase().includes(nameKey)) return false;
             if (idKey && !(r[3] || "").toLowerCase().includes(idKey)) return false;
             
+            // 修正篩選邏輯：統一解析日期
             if (start || end) {
-                const targetD = parseDateValue(r[5]);
-                if (start && targetD < parseDateValue(start)) return false;
-                if (end && targetD > parseDateValue(end)) return false;
+                const targetTime = parseDateValue(r[5]); // 送貨日期欄位
+                if (start && targetTime < parseDateValue(start)) return false;
+                if (end && targetTime > parseDateValue(end)) return false;
             }
             return true;
         });
 
-        // 核心排序邏輯修正
+        // 修正排序邏輯
         filtered.sort((a, b) => {
-            let valA = (a[sortIdx] || "").trim();
-            let valB = (b[sortIdx] || "").trim();
+            const valA = (a[sortIdx] || "").trim();
+            const valB = (b[sortIdx] || "").trim();
 
-            if (sortIdx === 1 || sortIdx === 5) { // 日期排序
-                const timeA = parseDateValue(valA);
-                const timeB = parseDateValue(valB);
-                return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
-            } else { // 單號排序
+            if (sortIdx === 1 || sortIdx === 5) {
+                const tA = parseDateValue(valA);
+                const tB = parseDateValue(valB);
+                return sortOrder === 'asc' ? tA - tB : tB - tA;
+            } else {
                 return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
             }
         });
