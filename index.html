@@ -10,6 +10,7 @@
         .container { max-width: 900px; margin: 20px auto; background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); box-sizing: border-box; }
         .header-logo { width: 120px; margin: 0 auto 25px; display: block; }
         
+        /* 管理面板（電腦版） */
         #control-panel { display: none; background: #fffcfd; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border); }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
         input, button, select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; outline: none; }
@@ -27,7 +28,6 @@
         .order-toggle span { padding: 8px 12px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--primary); }
         .order-toggle span.active { background: var(--success); color: white; }
 
-        /* 訂單卡片：強制 2 列佈局 */
         .order-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; padding: 15px; border-left: 6px solid var(--accent); }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .label { font-size: 11px; color: #aaa; font-weight: bold; display: block; margin-bottom: 3px; }
@@ -44,9 +44,18 @@
         .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
         .login-box input { width: 100%; margin-bottom: 20px; border: 1px solid var(--border); padding: 12px; border-radius: 6px; box-sizing: border-box; }
 
-        /* 手機版微調：移除切換到一列的設定，保持兩列，並稍微縮小字體以適應空間 */
+        /* 手機版微調 */
         @media (max-width: 600px) {
-            .info-grid { grid-template-columns: 1fr 1.2fr; gap: 10px; } /* 左欄寬度略小於右欄 */
+            /* 訂單查詢面板縮減 50% 的視覺感 */
+            #control-panel { padding: 10px; margin-bottom: 15px; }
+            #control-panel h3 { font-size: 14px; }
+            #control-panel .btn-refresh, #control-panel button { padding: 4px 8px; font-size: 12px; height: 30px; min-width: 70px; }
+            .filter-grid { gap: 8px; grid-template-columns: 1fr 1fr; } /* 面板內改為兩兩並排以省空間 */
+            .filter-grid input { padding: 6px; font-size: 12px; height: 30px; }
+            .filter-grid .label { font-size: 9px; margin-bottom: 1px; }
+
+            /* 卡片維持 2 列佈局 */
+            .info-grid { grid-template-columns: 1fr 1.2fr; gap: 10px; }
             .val { font-size: 12px; }
             .val-product { font-size: 12px; padding: 8px; }
             .container { padding: 15px; }
@@ -69,18 +78,18 @@
     </div>
 
     <div id="control-panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h3 style="margin:0; color:var(--primary);">訂單查詢與出貨回報</h3>
-            <div style="display:flex; gap:10px;">
+            <div style="display:flex; gap:5px;">
                 <button onclick="reloadData()" id="refreshBtn" class="btn-refresh">更新資料</button>
-                <button onclick="location.reload()" style="background:#bdc3c7; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">登出</button>
+                <button onclick="location.reload()" style="background:#bdc3c7; color:white; border:none; padding:4px 10px; border-radius:5px; cursor:pointer;">登出</button>
             </div>
         </div>
         <div class="filter-grid">
             <div><span class="label">送貨日期 (從)</span><input type="date" id="filter-start" onchange="applyFilters()" style="width:100%;"></div>
             <div><span class="label">送貨日期 (至)</span><input type="date" id="filter-end" onchange="applyFilters()" style="width:100%;"></div>
-            <div><span class="label">客戶姓名</span><input type="text" id="filter-name" placeholder="搜尋姓名" oninput="applyFilters()" style="width:100%;"></div>
-            <div><span class="label">訂單單號</span><input type="text" id="filter-id" placeholder="搜尋單號" oninput="applyFilters()" style="width:100%;"></div>
+            <div><span class="label">客戶姓名</span><input type="text" id="filter-name" placeholder="姓名" oninput="applyFilters()" style="width:100%;"></div>
+            <div><span class="label">訂單單號</span><input type="text" id="filter-id" placeholder="單號" oninput="applyFilters()" style="width:100%;"></div>
         </div>
     </div>
 
@@ -117,7 +126,6 @@
     let currentKey = "", currentEmail = "";
     let isStaff = false, currentTab = 'unshipped', sortOrder = 'desc';
 
-    // 保持不變的日期解析器
     function parseDateValue(str) {
         if (!str) return 0;
         let cleanStr = str.toString().trim();
