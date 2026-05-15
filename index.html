@@ -6,42 +6,35 @@
     <title>供應商管理系統 | Bespoke Mall</title>
     <style>
         :root { --primary: #7f8c8d; --accent: #f8d7da; --bg: #fdf2f4; --success: #e8aeb7; --text: #4a4a4a; --white: #ffffff; --border: #f2e1e4; }
-        
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: var(--text); line-height: 1.6; font-size: 14px; }
         .container { max-width: 900px; margin: 20px auto; background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); box-sizing: border-box; }
         .header-logo { width: 120px; margin: 0 auto 25px; display: block; }
-        
-        /* 管理面板 */
         #control-panel { display: none; background: #fffcfd; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border); }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
         input, button, select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; outline: none; }
         
-        /* 更新資料按鈕 */
+        /* 按鈕視覺反饋 */
         .btn-refresh { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; min-width: 90px; height: 38px; display: flex; align-items: center; justify-content: center; }
         .btn-refresh:disabled { background: #bdc3c7; cursor: not-allowed; }
 
-        /* 頁籤 */
         .status-toggle-group { display: flex; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
         .status-toggle-group button { flex: 1; background: white; color: var(--primary); border: none; border-right: 1px solid var(--accent); padding: 14px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .status-toggle-group button.active { background: var(--success); color: white; }
 
-        /* 工具列 */
         .toolbar { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; flex-wrap: wrap; gap: 10px; border-top: 1px dashed var(--accent); padding-top: 15px; }
         .sort-group { display: flex; align-items: center; gap: 8px; }
         .order-toggle { border: 1px solid var(--accent); display: flex; border-radius: 6px; overflow: hidden; background: white; }
-        .order-toggle span { padding: 8px 12px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .order-toggle span { padding: 8px 12px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--primary); }
         .order-toggle span.active { background: var(--success); color: white; }
 
-        /* 訂單卡片 */
         .order-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; padding: 20px; border-left: 6px solid var(--accent); }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .label { font-size: 11px; color: #aaa; font-weight: bold; display: block; margin-bottom: 3px; }
-        .val { font-size: 14px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-all; line-height: 1.5; color: var(--text); }
+        .val { font-size: 14px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-all; color: var(--text); }
         .val-product { background: #fdf9f9; padding: 12px; border-radius: 6px; border: 1px solid #f2e1e4; }
 
         .btn-ship { background: var(--success); color: white; width: 100%; padding: 14px; border-radius: 8px; margin-top: 10px; font-size: 14px; border: none; font-weight: bold; cursor: pointer; }
         .btn-ship.shipped { background: #dcdde1; color: #7f8c8d; cursor: not-allowed; }
-        .ship-time { font-size: 13px; color: var(--success); font-weight: bold; margin-top: 5px; display: block; }
         
         .loading-spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -49,7 +42,6 @@
         #login-section { text-align: center; padding: 40px 0; }
         .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
         .login-box input { width: 100%; margin-bottom: 20px; border: 1px solid var(--border); padding: 12px; border-radius: 6px; box-sizing: border-box; }
-
         @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; gap: 0; } }
     </style>
 </head>
@@ -105,7 +97,6 @@
                 </div>
             </div>
         </div>
-        
         <div id="result-list"></div>
     </div>
 </div>
@@ -117,6 +108,13 @@
     let allData = [];
     let currentKey = "", currentEmail = "";
     let isStaff = false, currentTab = 'unshipped', sortOrder = 'desc';
+
+    // 日期解析穩定版：處理各種日期字串
+    function parseDateValue(str) {
+        if (!str) return 0;
+        const d = new Date(str.replace(/\//g, '-'));
+        return isNaN(d.getTime()) ? 0 : d.getTime();
+    }
 
     function parseCSV(text) {
         const rows = [];
@@ -160,7 +158,7 @@
             if (isStaff) { allData = rows.slice(1).filter(r => r[3]); }
             else { allData = rows.filter(r => r[2]?.toLowerCase() === currentKey.toLowerCase() && r[12]?.toLowerCase() === currentEmail.toLowerCase()); }
             return allData.length > 0;
-        } catch (e) { console.error(e); return false; }
+        } catch (e) { return false; }
     }
 
     function setStatusFilter(status) {
@@ -182,7 +180,7 @@
         const end = document.getElementById('filter-end').value;
         const nameKey = document.getElementById('filter-name').value.toLowerCase();
         const idKey = document.getElementById('filter-id').value.toLowerCase();
-        const sortFieldIndex = parseInt(document.getElementById('sortField').value);
+        const sortIdx = parseInt(document.getElementById('sortField').value);
 
         let filtered = allData.filter(r => {
             const status = (r[9] || "").trim();
@@ -191,31 +189,26 @@
             if (nameKey && !(r[4] || "").toLowerCase().includes(nameKey)) return false;
             if (idKey && !(r[3] || "").toLowerCase().includes(idKey)) return false;
             
-            // 送貨日期篩選
             if (start || end) {
-                const dateVal = new Date(r[5]);
-                if (!isNaN(dateVal.getTime())) {
-                    if (start && dateVal < new Date(start)) return false;
-                    if (end && dateVal > new Date(end)) return false;
-                }
+                const targetD = parseDateValue(r[5]);
+                if (start && targetD < parseDateValue(start)) return false;
+                if (end && targetD > parseDateValue(end)) return false;
             }
             return true;
         });
 
-        // 排序邏輯修正：嚴格執行指定欄位排序
+        // 核心排序邏輯修正
         filtered.sort((a, b) => {
-            let valA = (a[sortFieldIndex] || "").toString().trim();
-            let valB = (b[sortFieldIndex] || "").toString().trim();
-            
-            // 如果是日期欄位 (1或5)，轉換為時間戳比較
-            if (sortFieldIndex === 1 || sortFieldIndex === 5) {
-                const timeA = new Date(valA).getTime() || 0;
-                const timeB = new Date(valB).getTime() || 0;
+            let valA = (a[sortIdx] || "").trim();
+            let valB = (b[sortIdx] || "").trim();
+
+            if (sortIdx === 1 || sortIdx === 5) { // 日期排序
+                const timeA = parseDateValue(valA);
+                const timeB = parseDateValue(valB);
                 return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
+            } else { // 單號排序
+                return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
             }
-            
-            // 一般欄位
-            return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
         });
 
         renderUI(filtered);
@@ -251,7 +244,7 @@
                         <div class="val">${r[6] || '-'}</div>
                     </div>
                 </div>
-                ${isDone ? `<span class="ship-time">✓ 同步時間：${r[10] || ''}</span>` : ''}
+                ${isDone ? `<span class="ship-time" style="color:#e8aeb7; font-weight:bold;">✓ 同步時間：${r[10] || ''}</span>` : ''}
                 <button id="btn-${r[3]}" class="btn-ship ${isDone ? 'shipped' : ''}" onclick="confirmShip('${r[3]}')" ${isDone ? 'disabled' : ''}>
                     ${isDone ? '出貨同步完成' : '確認已出貨'}
                 </button>
@@ -266,7 +259,7 @@
         btn.disabled = true; btn.innerHTML = '<span class="loading-spin"></span>';
         try {
             await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ orderId: orderId }) });
-            alert('系統已更新！可於5分鐘後可點擊更新資料重新載入資料確認');
+            alert('系統已更新！請稍候點擊更新資料載入確認');
             await loadData();
             applyFilters();
         } catch (e) { alert('同步失敗'); btn.disabled = false; btn.innerText = "確認已出貨"; }
@@ -279,7 +272,7 @@
         await loadData();
         applyFilters();
         btn.disabled = false;
-        btn.innerText = "更新資料";
+        btn.innerHTML = '更新資料';
     }
 </script>
 </body>
