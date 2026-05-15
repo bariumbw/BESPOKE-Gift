@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>供應商管理系統 | Bespoke Mall</title>
     <style>
-        /* 統一字體與顏色設定（無紅字，14px） */
         :root { --primary: #7f8c8d; --accent: #f8d7da; --bg: #fdf2f4; --success: #e8aeb7; --text: #4a4a4a; --white: #ffffff; --border: #f2e1e4; }
         
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: var(--text); line-height: 1.6; font-size: 14px; }
@@ -21,11 +20,12 @@
         .btn-refresh { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; min-width: 90px; height: 38px; display: flex; align-items: center; justify-content: center; }
         .btn-refresh:disabled { background: #bdc3c7; cursor: not-allowed; }
 
-        /* 頁籤與排序工具列 */
+        /* 頁籤 */
         .status-toggle-group { display: flex; border: 1px solid var(--accent); border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
         .status-toggle-group button { flex: 1; background: white; color: var(--primary); border: none; border-right: 1px solid var(--accent); padding: 14px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .status-toggle-group button.active { background: var(--success); color: white; }
 
+        /* 工具列 */
         .toolbar { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; flex-wrap: wrap; gap: 10px; border-top: 1px dashed var(--accent); padding-top: 15px; }
         .sort-group { display: flex; align-items: center; gap: 8px; }
         .order-toggle { border: 1px solid var(--accent); display: flex; border-radius: 6px; overflow: hidden; background: white; }
@@ -36,7 +36,6 @@
         .order-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; padding: 20px; border-left: 6px solid var(--accent); }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .label { font-size: 11px; color: #aaa; font-weight: bold; display: block; margin-bottom: 3px; }
-        
         .val { font-size: 14px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-all; line-height: 1.5; color: var(--text); }
         .val-product { background: #fdf9f9; padding: 12px; border-radius: 6px; border: 1px solid #f2e1e4; }
 
@@ -44,11 +43,9 @@
         .btn-ship.shipped { background: #dcdde1; color: #7f8c8d; cursor: not-allowed; }
         .ship-time { font-size: 13px; color: var(--success); font-weight: bold; margin-top: 5px; display: block; }
         
-        /* 旋轉動畫 */
         .loading-spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* 登入樣式 */
         #login-section { text-align: center; padding: 40px 0; }
         .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
         .login-box input { width: 100%; margin-bottom: 20px; border: 1px solid var(--border); padding: 12px; border-radius: 6px; box-sizing: border-box; }
@@ -163,7 +160,7 @@
             if (isStaff) { allData = rows.slice(1).filter(r => r[3]); }
             else { allData = rows.filter(r => r[2]?.toLowerCase() === currentKey.toLowerCase() && r[12]?.toLowerCase() === currentEmail.toLowerCase()); }
             return allData.length > 0;
-        } catch (e) { return false; }
+        } catch (e) { console.error(e); return false; }
     }
 
     function setStatusFilter(status) {
@@ -185,37 +182,39 @@
         const end = document.getElementById('filter-end').value;
         const nameKey = document.getElementById('filter-name').value.toLowerCase();
         const idKey = document.getElementById('filter-id').value.toLowerCase();
-        const sortField = parseInt(document.getElementById('sortField').value);
+        const sortFieldIndex = parseInt(document.getElementById('sortField').value);
 
         let filtered = allData.filter(r => {
             const status = (r[9] || "").trim();
             if (currentTab === 'unshipped' && status === '已出貨') return false;
-            if (currentTab === 'shipped' && status !== '聯絡中' && status !== '已出貨') return false; 
-            // 這裡狀態過濾保持原樣
             if (currentTab === 'shipped' && status !== '已出貨') return false;
-
             if (nameKey && !(r[4] || "").toLowerCase().includes(nameKey)) return false;
             if (idKey && !(r[3] || "").toLowerCase().includes(idKey)) return false;
+            
+            // 送貨日期篩選
             if (start || end) {
-                const d = new Date(r[5]).getTime();
-                if (start && d < new Date(start).getTime()) return false;
-                if (end && d > new Date(end).getTime()) return false;
+                const dateVal = new Date(r[5]);
+                if (!isNaN(dateVal.getTime())) {
+                    if (start && dateVal < new Date(start)) return false;
+                    if (end && dateVal > new Date(end)) return false;
+                }
             }
             return true;
         });
 
-        // 排序邏輯修正
+        // 排序邏輯修正：嚴格執行指定欄位排序
         filtered.sort((a, b) => {
-            let valA = (a[sortField] || "").toString().trim();
-            let valB = (b[sortField] || "").toString().trim();
+            let valA = (a[sortFieldIndex] || "").toString().trim();
+            let valB = (b[sortFieldIndex] || "").toString().trim();
             
-            // 如果是日期排序，確保格式可比較
-            if (sortField === 5 || sortField === 1) {
-                valA = new Date(valA).getTime() || 0;
-                valB = new Date(valB).getTime() || 0;
-                return sortOrder === 'asc' ? valA - valB : valB - valA;
+            // 如果是日期欄位 (1或5)，轉換為時間戳比較
+            if (sortFieldIndex === 1 || sortFieldIndex === 5) {
+                const timeA = new Date(valA).getTime() || 0;
+                const timeB = new Date(valB).getTime() || 0;
+                return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
             }
             
+            // 一般欄位
             return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
         });
 
@@ -275,15 +274,12 @@
 
     async function reloadData() {
         const btn = document.getElementById('refreshBtn');
-        const originalText = btn.innerText;
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spin"></span>';
-        
         await loadData();
         applyFilters();
-        
         btn.disabled = false;
-        btn.innerText = originalText;
+        btn.innerText = "更新資料";
     }
 </script>
 </body>
