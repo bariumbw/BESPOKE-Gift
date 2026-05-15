@@ -27,11 +27,12 @@
         .order-toggle span { padding: 8px 12px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--primary); }
         .order-toggle span.active { background: var(--success); color: white; }
 
-        .order-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; padding: 20px; border-left: 6px solid var(--accent); }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        /* 訂單卡片：強制 2 列佈局 */
+        .order-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; padding: 15px; border-left: 6px solid var(--accent); }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .label { font-size: 11px; color: #aaa; font-weight: bold; display: block; margin-bottom: 3px; }
-        .val { font-size: 14px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-all; color: var(--text); }
-        .val-product { background: #fdf9f9; padding: 12px; border-radius: 6px; border: 1px solid #f2e1e4; }
+        .val { font-size: 13px; margin-bottom: 12px; white-space: pre-wrap; word-break: break-all; color: var(--text); }
+        .val-product { background: #fdf9f9; padding: 10px; border-radius: 6px; border: 1px solid #f2e1e4; font-size: 13px; }
 
         .btn-ship { background: var(--success); color: white; width: 100%; padding: 14px; border-radius: 8px; margin-top: 10px; font-size: 14px; border: none; font-weight: bold; cursor: pointer; }
         .btn-ship.shipped { background: #dcdde1; color: #7f8c8d; cursor: not-allowed; }
@@ -42,7 +43,14 @@
         #login-section { text-align: center; padding: 40px 0; }
         .login-box { max-width: 350px; margin: 0 auto; text-align: left; }
         .login-box input { width: 100%; margin-bottom: 20px; border: 1px solid var(--border); padding: 12px; border-radius: 6px; box-sizing: border-box; }
-        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; gap: 0; } }
+
+        /* 手機版微調：移除切換到一列的設定，保持兩列，並稍微縮小字體以適應空間 */
+        @media (max-width: 600px) {
+            .info-grid { grid-template-columns: 1fr 1.2fr; gap: 10px; } /* 左欄寬度略小於右欄 */
+            .val { font-size: 12px; }
+            .val-product { font-size: 12px; padding: 8px; }
+            .container { padding: 15px; }
+        }
     </style>
 </head>
 <body>
@@ -109,13 +117,10 @@
     let currentKey = "", currentEmail = "";
     let isStaff = false, currentTab = 'unshipped', sortOrder = 'desc';
 
-    /**
-     * 強大的日期解析器：處理「2026年8月1日」或「2026/08/01」
-     */
+    // 保持不變的日期解析器
     function parseDateValue(str) {
         if (!str) return 0;
         let cleanStr = str.toString().trim();
-        // 處理中文日期格式
         if (cleanStr.includes('年')) {
             cleanStr = cleanStr.replace('年', '-').replace('月', '-').replace('日', '');
         }
@@ -195,21 +200,17 @@
             if (currentTab === 'shipped' && status !== '已出貨') return false;
             if (nameKey && !(r[4] || "").toLowerCase().includes(nameKey)) return false;
             if (idKey && !(r[3] || "").toLowerCase().includes(idKey)) return false;
-            
-            // 修正篩選邏輯：統一解析日期
             if (start || end) {
-                const targetTime = parseDateValue(r[5]); // 送貨日期欄位
+                const targetTime = parseDateValue(r[5]);
                 if (start && targetTime < parseDateValue(start)) return false;
                 if (end && targetTime > parseDateValue(end)) return false;
             }
             return true;
         });
 
-        // 修正排序邏輯
         filtered.sort((a, b) => {
             const valA = (a[sortIdx] || "").trim();
             const valB = (b[sortIdx] || "").trim();
-
             if (sortIdx === 1 || sortIdx === 5) {
                 const tA = parseDateValue(valA);
                 const tB = parseDateValue(valB);
@@ -218,7 +219,6 @@
                 return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
             }
         });
-
         renderUI(filtered);
     }
 
@@ -226,7 +226,6 @@
         const container = document.getElementById('result-list');
         container.innerHTML = "";
         document.getElementById('count-info').innerText = `找到 ${data.length} 筆訂單`;
-
         data.forEach(r => {
             const isDone = (r[9] === "已出貨");
             const card = document.createElement('div');
@@ -275,12 +274,10 @@
 
     async function reloadData() {
         const btn = document.getElementById('refreshBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spin"></span>';
+        btn.disabled = true; btn.innerHTML = '<span class="loading-spin"></span>';
         await loadData();
         applyFilters();
-        btn.disabled = false;
-        btn.innerHTML = '更新資料';
+        btn.disabled = false; btn.innerHTML = '更新資料';
     }
 </script>
 </body>
