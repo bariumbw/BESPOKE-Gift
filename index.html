@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>供應商管理系統 | Bespoke Mall</title>
     <style>
-        /* 統一字體與顏色設定（移除紅字，字體統一為 14px） */
+        /* 統一字體與顏色設定（無紅字，14px） */
         :root { --primary: #7f8c8d; --accent: #f8d7da; --bg: #fdf2f4; --success: #e8aeb7; --text: #4a4a4a; --white: #ffffff; --border: #f2e1e4; }
         
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: var(--text); line-height: 1.6; font-size: 14px; }
@@ -80,8 +80,8 @@
             </div>
         </div>
         <div class="filter-grid">
-            <div><span class="label">日期 (從)</span><input type="date" id="filter-start" onchange="applyFilters()" style="width:100%;"></div>
-            <div><span class="label">日期 (至)</span><input type="date" id="filter-end" onchange="applyFilters()" style="width:100%;"></div>
+            <div><span class="label">送貨日期 (從)</span><input type="date" id="filter-start" onchange="applyFilters()" style="width:100%;"></div>
+            <div><span class="label">送貨日期 (至)</span><input type="date" id="filter-end" onchange="applyFilters()" style="width:100%;"></div>
             <div><span class="label">客戶姓名</span><input type="text" id="filter-name" placeholder="搜尋姓名" oninput="applyFilters()" style="width:100%;"></div>
             <div><span class="label">訂單單號</span><input type="text" id="filter-id" placeholder="搜尋單號" oninput="applyFilters()" style="width:100%;"></div>
         </div>
@@ -190,7 +190,10 @@
         let filtered = allData.filter(r => {
             const status = (r[9] || "").trim();
             if (currentTab === 'unshipped' && status === '已出貨') return false;
+            if (currentTab === 'shipped' && status !== '聯絡中' && status !== '已出貨') return false; 
+            // 這裡狀態過濾保持原樣
             if (currentTab === 'shipped' && status !== '已出貨') return false;
+
             if (nameKey && !(r[4] || "").toLowerCase().includes(nameKey)) return false;
             if (idKey && !(r[3] || "").toLowerCase().includes(idKey)) return false;
             if (start || end) {
@@ -201,8 +204,18 @@
             return true;
         });
 
+        // 排序邏輯修正
         filtered.sort((a, b) => {
-            let valA = a[sortField] || "", valB = b[sortField] || "";
+            let valA = (a[sortField] || "").toString().trim();
+            let valB = (b[sortField] || "").toString().trim();
+            
+            // 如果是日期排序，確保格式可比較
+            if (sortField === 5 || sortField === 1) {
+                valA = new Date(valA).getTime() || 0;
+                valB = new Date(valB).getTime() || 0;
+                return sortOrder === 'asc' ? valA - valB : valB - valA;
+            }
+            
             return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
         });
 
@@ -241,7 +254,7 @@
                 </div>
                 ${isDone ? `<span class="ship-time">✓ 同步時間：${r[10] || ''}</span>` : ''}
                 <button id="btn-${r[3]}" class="btn-ship ${isDone ? 'shipped' : ''}" onclick="confirmShip('${r[3]}')" ${isDone ? 'disabled' : ''}>
-                    ${isDone ? '已完成出貨' : '確認已出貨'}
+                    ${isDone ? '出貨同步完成' : '確認已出貨'}
                 </button>
             `;
             container.appendChild(card);
